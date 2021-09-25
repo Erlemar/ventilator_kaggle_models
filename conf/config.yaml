@@ -1,18 +1,17 @@
 defaults:
   - _self_
-  - datamodule: image_classification
+  - datamodule: ventilator_datamodule
   - trainer: default_trainer
   - training: default_training
 #  - logging: comet_ml
   - logging: loggers
-  - optimizer: adamw
-  - scheduler: plateau
-  - model: simple_model
+  - optimizer: adam
+  - scheduler: linearwithwarmup
+  - model: ventilator_model_0
   - callbacks: callbacks
-  - private: custom
-  - augmentation: basic_augs
-  - loss: cross_entropy
-  - metric: accuracy
+  - private: default
+  - loss: ventilator
+  - metric: ventilatormae
   - inference: basic
   - override hydra/hydra_logging: colorlog
   - override hydra/job_logging: colorlog
@@ -20,12 +19,13 @@ defaults:
 general:
   logs_folder_name: logs
   workspace: erlemar
-  project_name: dl_pipeline
+  project_name: ventilator_kaggle
   device: cuda
   log_code: True
   save_pytorch_model: True
   save_best: True
-  convert_to_jit: True
+  convert_to_jit: False
+  predict: True
 
 hydra:
   run:

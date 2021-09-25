@@ -1,8 +1,7 @@
-
-lr: 0.0001
+lr: 0.001
 metric: ${metric.metric.metric_name}
-mode: "max"
-seed: 666
-debug: True
-n_classes: 10
-lightning_module_name: src.lightning_classes.lightning_image_classification.LitImageClassification
+mode: "min"
+seed: 42
+debug: false
+n_classes: 1
+lightning_module_name: src.lightning_classes.lightning_ventilator.LitImageClassification

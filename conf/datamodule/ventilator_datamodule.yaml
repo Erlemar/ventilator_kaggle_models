@@ -1,0 +1,9 @@
+path: d:/DataScience/Python_projects/Current_projects/GBVPP/data
+n_folds: 5
+fold_n: 0
+class_name: src.datasets.ventilator_dataset.VentilatorDataset
+data_module_name: src.lightning_classes.datamodule_ventilator.ImagenetteDataModule
+num_workers: 0
+batch_size: 256
+pin_memory: True
+train_len: 6036000

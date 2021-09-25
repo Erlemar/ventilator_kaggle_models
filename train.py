@@ -4,6 +4,7 @@ import warnings
 from pathlib import Path
 
 import hydra
+import pandas as pd
 import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -19,7 +20,6 @@ def run(cfg: DictConfig) -> None:
     """
     Run pytorch-lightning model
 
-    # TODO: switch to .log API
     # TODO: check their f1
 
     Args:
@@ -74,10 +74,14 @@ def run(cfg: DictConfig) -> None:
             model_name = 'saved_models/last.pth'
             torch.save(model.model.state_dict(), model_name)
 
-    if cfg.general.convert_to_jit and os.path.exists(trainer.checkpoint_callback.best_model_path):  # type: ignore
-        best_path = trainer.checkpoint_callback.best_model_path  # type: ignore
-        save_name = os.path.basename(os.path.normpath(best_path))
-        convert_to_jit(model, save_name, cfg)
+    if cfg.general.predict:
+        sub = pd.read_csv(os.path.join(cfg.datamodule.path, 'sample_submission.csv'))
+        prediction = trainer.predict(model, dm.test_dataloader())
+        predictions = []
+        for pred in prediction:
+            predictions.extend(pred.reshape(-1, ).detach().cpu().numpy())
+        sub['pressure'] = predictions
+        sub.to_csv(f'submission_{run_name}.csv', index=False)
 
 
 @hydra.main(config_path='conf', config_name='config')
