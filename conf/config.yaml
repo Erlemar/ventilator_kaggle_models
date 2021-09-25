@@ -3,8 +3,8 @@ defaults:
   - datamodule: ventilator_datamodule
   - trainer: default_trainer
   - training: default_training
-#  - logging: comet_ml
-  - logging: loggers
+  - logging: wandb
+#  - logging: loggers
   - optimizer: adam
   - scheduler: linearwithwarmup
   - model: ventilator_model_0

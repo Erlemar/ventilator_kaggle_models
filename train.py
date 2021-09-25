@@ -44,6 +44,9 @@ def run(cfg: DictConfig) -> None:
         for logger in cfg.logging.loggers:
             if 'experiment_name' in logger.params.keys():
                 logger.params['experiment_name'] = run_name
+            elif 'name' in logger.params.keys():
+                logger.params['name'] = run_name
+
             loggers.append(load_obj(logger.class_name)(**logger.params))
 
     callbacks.append(EarlyStopping(**cfg.callbacks.early_stopping.params))
