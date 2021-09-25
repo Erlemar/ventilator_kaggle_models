@@ -1,0 +1,4 @@
+
+class_name: torch.optim.ASGD
+params:
+  lr: ${training.lr}

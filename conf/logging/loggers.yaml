@@ -1,0 +1,24 @@
+
+log: True
+loggers:
+  - class_name: pytorch_lightning.loggers.CSVLogger
+    params:
+      save_dir: logs/csv_log.csv
+#      name: ${general.run_name}
+      name: .
+  #    - class_name: src.utils.loggers.PrintLogger
+  #      params:
+  #        csv_path:
+
+  - class_name: pytorch_lightning.loggers.TensorBoardLogger
+    params:
+      save_dir: .
+      name: .
+
+#  - class_name: pytorch_lightning.loggers.CometLogger
+#    params:
+#      save_dir: ${general.logs_folder_name}
+#      workspace: ${general.workspace}
+#      project_name: ${general.project_name}
+#      api_key: ${private.comet_api}
+#      experiment_name: ${general.run_name}

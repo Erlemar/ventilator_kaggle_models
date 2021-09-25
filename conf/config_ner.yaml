@@ -1,0 +1,31 @@
+defaults:
+  - _self_
+  - datamodule: ner
+  - trainer: default_trainer
+  - training: ner_training
+  - logging: loggers
+  - optimizer: adamw
+  - scheduler: plateau
+  - model: bilstm_crf_simple
+  - callbacks: callbacks
+  - private: custom
+  - metric: f1_score_mine
+  - inference: basic
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
+
+general:
+  logs_folder_name: logs
+  workspace: erlemar
+  project_name: dl_pipeline
+  device: cuda
+  log_code: True
+  save_pytorch_model: True
+  save_best: True
+
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}

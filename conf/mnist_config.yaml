@@ -1,0 +1,34 @@
+defaults:
+  - _self_
+  - datamodule: mnist_image_classification
+  - trainer: default_trainer
+  - training: default_training
+  - logging: loggers
+  - optimizer: adamw
+  - scheduler: plateau
+  - model: simple_model
+  - callbacks: callbacks
+  - private: default
+  - augmentation: basic_augs
+  - loss: cross_entropy
+  - metric: accuracy
+  - inference: basic
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
+
+general:
+  logs_folder_name: logs
+  workspace: erlemar
+  project_name: dl_pipeline
+  device: cuda
+  log_code: True
+  save_pytorch_model: True
+  save_best: True
+  convert_to_jit: False
+
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d_%H-%M-%S}_${hydra.job.override_dirname}
+  sweep:
+    dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}

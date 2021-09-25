@@ -1,0 +1,4 @@
+
+class_name: torch.optim.Rprop
+params:
+  lr: ${training.lr}

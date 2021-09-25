@@ -1,0 +1,4 @@
+
+class_name: torch.optim.Adagrad
+params:
+  lr: ${training.lr}
