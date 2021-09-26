@@ -85,6 +85,7 @@ def run(cfg: DictConfig) -> None:
             predictions.extend(pred.reshape(-1, ).detach().cpu().numpy())
         sub['pressure'] = predictions
         sub.to_csv(f'submission_{run_name}.csv', index=False)
+    print(run_name)
 
 
 @hydra.main(config_path='conf', config_name='config')

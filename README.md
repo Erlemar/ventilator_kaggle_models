@@ -34,4 +34,10 @@ unzip it and define the path to it in conf/datamodule/image_classification.yaml 
 ```shell
 python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset1 model=ventilator_model_1
 
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset1 model=ventilator_model_2
+
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset2 model=ventilator_model_3
+
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset3 model=ventilator_model_4
+
 ```
