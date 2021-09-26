@@ -32,7 +32,7 @@ class VentilatorNet(nn.Module):
         )
 
     def forward(self, x):
-        features = self.mlp(x)
+        features = self.mlp(x['input'])
         features, _ = self.lstm(features)
         pred = self.logits(features)
         return pred

@@ -1,0 +1,7 @@
+class_name: src.models.ventilator_model_1.VentilatorNet
+params:
+  input_dim: 7
+  lstm_dim: 512
+  dense_dim: 512
+  logit_dim: 256
+  n_classes: ${training.n_classes}

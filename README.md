@@ -30,3 +30,8 @@ The default run:
 The default version of the pipeline is run on imagenette dataset. To do it, download the data from this repository:
 https://github.com/fastai/imagenette
 unzip it and define the path to it in conf/datamodule/image_classification.yaml path
+
+```shell
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset1 model=ventilator_model_1
+
+```

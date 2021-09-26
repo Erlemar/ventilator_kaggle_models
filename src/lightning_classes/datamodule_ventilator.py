@@ -23,7 +23,6 @@ class ImagenetteDataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
         test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
-        sub = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'sample_submission.csv'))
         gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)
         splits = list(gkf.split(X=train, y=train, groups=train["breath_id"].values))
         train_idx, valid_idx = splits[self.cfg.datamodule.fold_n]

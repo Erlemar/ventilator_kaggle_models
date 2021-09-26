@@ -41,8 +41,11 @@ class LitImageClassification(pl.LightningModule):
         )
 
     def training_step(self, batch, *args, **kwargs):  # type: ignore
-        data = batch['input']
-        pred = self(data).squeeze(-1)
+        # data = batch['input']
+        # pred = self(data).squeeze(-1)
+        pred = self(batch).squeeze(-1)
+        # print('pred', pred)
+
         loss = self.loss(pred, batch['p'], batch['u_out']).mean()
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
@@ -52,8 +55,9 @@ class LitImageClassification(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, *args, **kwargs):  # type: ignore
-        data = batch['input']
-        pred = self(data).squeeze(-1)
+        # data = batch['input']
+        # pred = self(data).squeeze(-1)
+        pred = self(batch).squeeze(-1)
         loss = self.loss(pred, batch['p'], batch['u_out']).mean()
         self.log('valid_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
@@ -63,5 +67,5 @@ class LitImageClassification(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, *args, **kwargs):  # type: ignore
-        data = batch['input']
-        return self(data).squeeze(-1)
+        # data = batch['input']
+        return self(batch).squeeze(-1)
