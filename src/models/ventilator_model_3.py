@@ -19,11 +19,9 @@ class VentilatorNet(nn.Module):
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(4 + input_dim, dense_dim // 2),
-            nn.LayerNorm(dense_dim // 2),
             nn.ReLU(),
             nn.Linear(dense_dim // 2, dense_dim),
-            nn.ReLU(),
-            nn.Dropout(0.2)
+            nn.ReLU()
         )
         self.r_emb = nn.Embedding(3, 2, padding_idx=0)
         self.c_emb = nn.Embedding(3, 2, padding_idx=0)

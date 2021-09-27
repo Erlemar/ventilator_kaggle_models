@@ -46,15 +46,11 @@ class VentilatorNet(nn.Module):
         c_emb = self.c_emb(x['c']).view(-1, 80, 2)
         seq_x = torch.cat((r_emb, c_emb, x['input']), 2)
         features = self.mlp(seq_x)
-        # print('features', features.shape)
         fs = self.transformer_encoder(features)
-        # print('fs', fs.shape)
         fs1 = self.transformer_model(features, features)
-        # print('fs1', fs1.shape)
 
         features, _ = self.lstm1(features)
         features, _ = self.lstm2(features)
-        # print('features1', features.shape)
         seq = torch.cat((features, fs, fs1), 2)
         pred = self.logits(seq)
         return pred

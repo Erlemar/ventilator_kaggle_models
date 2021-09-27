@@ -19,11 +19,9 @@ class VentilatorNet(nn.Module):
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(input_dim, dense_dim // 2),
-            nn.LayerNorm(dense_dim // 2),
             nn.ReLU(),
             nn.Linear(dense_dim // 2, dense_dim),
             nn.ReLU(),
-            nn.Dropout(0.2)
         )
 
         self.lstm1 = nn.LSTM(dense_dim, lstm_dim, batch_first=True, bidirectional=True)

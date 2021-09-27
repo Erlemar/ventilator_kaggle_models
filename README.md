@@ -40,4 +40,6 @@ python train.py datamodule.class_name=src.datasets.ventilator_dataset.Ventilator
 
 python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset3 model=ventilator_model_4
 
+    df['area'] = df['time_step'] * df['u_in']
+    df['area'] = df.groupby('breath_id')['area'].cumsum()
 ```
