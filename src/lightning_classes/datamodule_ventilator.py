@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import pytorch_lightning as pl
 from omegaconf import DictConfig
-from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 from torch.utils.data import DataLoader
 
 from src.utils.technical_utils import load_obj
@@ -23,7 +23,12 @@ class ImagenetteDataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
         test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
-        gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)
+
+        if self.cfg.datamodule.split == 'GroupKFold':
+            gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)
+        elif self.cfg.datamodule.split == 'GroupShuffleSplit':
+            gkf = GroupShuffleSplit(n_splits=self.cfg.datamodule.n_folds, random_state=self.cfg.training.seed)
+
         splits = list(gkf.split(X=train, y=train, groups=train["breath_id"].values))
         train_idx, valid_idx = splits[self.cfg.datamodule.fold_n]
 
@@ -33,9 +38,9 @@ class ImagenetteDataModule(pl.LightningDataModule):
         # train dataset
         dataset_class = load_obj(self.cfg.datamodule.class_name)
 
-        self.train_dataset = dataset_class(train_df)
-        self.valid_dataset = dataset_class(valid_df)
-        self.test_dataset = dataset_class(test)
+        self.train_dataset = dataset_class(train_df, mode='train', normalize=self.cfg.datamodule.normalize)
+        self.valid_dataset = dataset_class(valid_df, mode='valid', normalize=self.cfg.datamodule.normalize)
+        self.test_dataset = dataset_class(test, mode='test', normalize=self.cfg.datamodule.normalize)
 
     def train_dataloader(self):
         train_loader = DataLoader(

@@ -40,6 +40,14 @@ python train.py datamodule.class_name=src.datasets.ventilator_dataset.Ventilator
 
 python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset3 model=ventilator_model_4
 
-    df['area'] = df['time_step'] * df['u_in']
-    df['area'] = df.groupby('breath_id')['area'].cumsum()
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset7 model=ventilator_model_6 model.params.input_dim=30 datamodule.batch_size=64
+
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset7 model=ventilator_model_6 model.params.input_dim=30 model.params.norm=True datamodule.batch_size=64
+
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset7 model=ventilator_model_7 model.params.input_dim=30 datamodule.batch_size=64
+
+datamodule.split=GroupShuffleSplit
+
+python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset7 model=ventilator_model_7 model.params.input_dim=30 datamodule.batch_size=64 datamodule.split=GroupShuffleSplit datamodule.normalize=True
+
 ```

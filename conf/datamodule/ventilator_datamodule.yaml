@@ -1,4 +1,5 @@
 path: d:/DataScience/Python_projects/Current_projects/GBVPP/data
+split: GroupKFold
 n_folds: 5
 fold_n: 0
 class_name: src.datasets.ventilator_dataset.VentilatorDataset
@@ -7,3 +8,4 @@ num_workers: 0
 batch_size: 256
 pin_memory: True
 train_len: 6036000
+normalize: False
