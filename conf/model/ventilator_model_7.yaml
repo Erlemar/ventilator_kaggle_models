@@ -5,3 +5,4 @@ params:
   dense_dim: 512
   logit_dim: 256
   n_classes: ${training.n_classes}
+  initialize: True

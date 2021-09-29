@@ -12,7 +12,8 @@ class VentilatorNet(nn.Module):
                  nhead: int = 6,
                  num_layers: int = 6,
                  n_classes: int = 1,
-                 norm: bool = False
+                 norm: bool = False,
+                 initialize: bool = False,
                  ) -> None:
         """
         Model class.
@@ -45,28 +46,30 @@ class VentilatorNet(nn.Module):
             nn.PReLU(),
             nn.Linear(logit_dim, n_classes),
         )
-        for n, m in self.named_modules():
-            if isinstance(m, nn.LSTM):
-                for param in m.parameters():
-                    if len(param.shape) >= 2:
-                        nn.init.orthogonal_(param.data)
-                    else:
-                        nn.init.normal_(param.data)
-            elif isinstance(m, nn.GRU):
-                for param in m.parameters():
-                    if len(param.shape) >= 2:
-                        init.orthogonal_(param.data)
-                    else:
-                        init.normal_(param.data)
-            elif isinstance(m, (nn.Linear, nn.Embedding)):
-                m.weight.data.normal_(mean=0.0, std=1.0)
-                if isinstance(m, nn.Linear):
+
+        if initialize:
+            for n, m in self.named_modules():
+                if isinstance(m, nn.LSTM):
+                    for param in m.parameters():
+                        if len(param.shape) >= 2:
+                            nn.init.orthogonal_(param.data)
+                        else:
+                            nn.init.normal_(param.data)
+                elif isinstance(m, nn.GRU):
+                    for param in m.parameters():
+                        if len(param.shape) >= 2:
+                            init.orthogonal_(param.data)
+                        else:
+                            init.normal_(param.data)
+                elif isinstance(m, (nn.Linear, nn.Embedding)):
+                    m.weight.data.normal_(mean=0.0, std=1.0)
+                    if isinstance(m, nn.Linear):
+                        if m.bias is not None:
+                            m.bias.data.zero_()
+                elif isinstance(m, nn.LayerNorm):
                     if m.bias is not None:
                         m.bias.data.zero_()
-            elif isinstance(m, nn.LayerNorm):
-                if m.bias is not None:
-                    m.bias.data.zero_()
-                m.weight.data.fill_(1.0)
+                    m.weight.data.fill_(1.0)
 
     def forward(self, x):
         r_emb = self.r_emb(x['r']).view(-1, 80, 2)

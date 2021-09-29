@@ -9,3 +9,4 @@ params:
   num_layers: 6
   n_classes: ${training.n_classes}
   norm: False
+  initialize: True
