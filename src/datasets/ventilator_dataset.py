@@ -497,11 +497,6 @@ class VentilatorDataset7(Dataset):
         data['time_step_lag-1'] = data.groupby('breath_id')['time_step'].shift(-1)
         data['time_step_lag-2'] = data.groupby('breath_id')['time_step'].shift(-2)
         data['breath_time'] = data['time_step'] - data['time_step_lag']
-        data['delta_time'] = data['time_step_lag'] - data['time_step']
-        data['area_u_in'] = data['u_in'] * data['delta_time']
-        data['u_in_change'] = data['u_in_lag-1'] - data['u_in']
-        data['area_u_in_abs'] = data['u_in_change'] * data['delta_time']
-        data['uin_in_time'] = data['u_in_change'] / data['delta_time']
 
         data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
         data['one'] = 1
@@ -516,8 +511,7 @@ class VentilatorDataset7(Dataset):
        '10_out_std', 'expand_mean', 'expand_max', 'expand_std', 'breath_time',
        'u_in_lag', 'u_in_lag2', 'u_in_lag-1', 'u_in_lag-2', 'u_out_lag',
        'u_in_diff1', 'time_step_lag', 'time_step_lag2', 'time_step_lag-1',
-       'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean',
-                         'delta_time', 'area_u_in', 'u_in_change', 'area_u_in_abs', 'uin_in_time']
+       'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean']
         rs = RobustScaler()
         if normalize:
             if mode == 'train':
@@ -662,6 +656,11 @@ class VentilatorDataset8(Dataset):
         data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
         data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
 
+        data['delta_time'] = data['time_step_lag'] - data['time_step']
+        data['area_u_in'] = data['u_in'] * data['delta_time']
+        data['u_in_change'] = data['u_in_lag-1'] - data['u_in']
+        data['area_u_in_abs'] = data['u_in_change'] * data['delta_time']
+        data['uin_in_time'] = data['u_in_change'] / data['delta_time']
 
 
         data = data.drop(['one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame', 'breath_id_lag2same',
@@ -672,7 +671,8 @@ class VentilatorDataset8(Dataset):
        '10_out_std', 'expand_mean', 'expand_max', 'expand_std', 'breath_time',
        'u_in_lag', 'u_in_lag2', 'u_in_lag-1', 'u_in_lag-2', 'u_out_lag',
        'u_in_diff1', 'time_step_lag', 'time_step_lag2', 'time_step_lag-1',
-       'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean']
+       'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean',
+                         'delta_time', 'area_u_in', 'u_in_change', 'area_u_in_abs', 'uin_in_time']
         rs = RobustScaler()
         if normalize:
             if mode == 'train':
