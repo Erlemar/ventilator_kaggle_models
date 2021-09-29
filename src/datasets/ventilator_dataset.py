@@ -563,11 +563,6 @@ class VentilatorDataset7(Dataset):
             np.array(self.data['expand_mean'].values.tolist())[:, None],
             np.array(self.data['expand_max'].values.tolist())[:, None],
             np.array(self.data['expand_std'].values.tolist())[:, None],
-            np.array(self.data['delta_time'].values.tolist())[:, None],
-            np.array(self.data['area_u_in'].values.tolist())[:, None],
-            np.array(self.data['u_in_change'].values.tolist())[:, None],
-            np.array(self.data['area_u_in_abs'].values.tolist())[:, None],
-            np.array(self.data['uin_in_time'].values.tolist())[:, None],
         ], 1).transpose(0, 2, 1)
 
     def __getitem__(self, idx: int) -> Dict[str, npt.ArrayLike]:
@@ -724,6 +719,11 @@ class VentilatorDataset8(Dataset):
             np.array(self.data['expand_mean'].values.tolist())[:, None],
             np.array(self.data['expand_max'].values.tolist())[:, None],
             np.array(self.data['expand_std'].values.tolist())[:, None],
+            np.array(self.data['delta_time'].values.tolist())[:, None],
+            np.array(self.data['area_u_in'].values.tolist())[:, None],
+            np.array(self.data['u_in_change'].values.tolist())[:, None],
+            np.array(self.data['area_u_in_abs'].values.tolist())[:, None],
+            np.array(self.data['uin_in_time'].values.tolist())[:, None],
         ], 1).transpose(0, 2, 1)
 
     def __getitem__(self, idx: int) -> Dict[str, npt.ArrayLike]:
