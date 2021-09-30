@@ -506,12 +506,12 @@ class VentilatorDataset7(Dataset):
         data = data.drop(['one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame', 'breath_id_lag2same',
                           'u_out_lag2'], axis=1)
         cols_to_scale = ['time_step', 'u_in', 'u_out', 'pressure',
-       'RC', 'RandC', 'area', 'cross', 'cross2', 'ewm_u_in_mean',
-       'ewm_u_in_std', 'ewm_u_in_corr', '15_in_max', '15_out_std', '10_in_max',
-       '10_out_std', 'expand_mean', 'expand_max', 'expand_std', 'breath_time',
-       'u_in_lag', 'u_in_lag2', 'u_in_lag-1', 'u_in_lag-2', 'u_out_lag',
-       'u_in_diff1', 'time_step_lag', 'time_step_lag2', 'time_step_lag-1',
-       'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean']
+                         'RC', 'RandC', 'area', 'cross', 'cross2', 'ewm_u_in_mean',
+                         'ewm_u_in_std', 'ewm_u_in_corr', '15_in_max', '15_out_std', '10_in_max',
+                         '10_out_std', 'expand_mean', 'expand_max', 'expand_std', 'breath_time',
+                         'u_in_lag', 'u_in_lag2', 'u_in_lag-1', 'u_in_lag-2', 'u_out_lag',
+                         'u_in_diff1', 'time_step_lag', 'time_step_lag2', 'time_step_lag-1',
+                         'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean']
         rs = RobustScaler()
         if normalize:
             if mode == 'train':
@@ -578,6 +578,7 @@ class VentilatorDataset7(Dataset):
 
     def __len__(self) -> int:
         return len(self.data)
+
 
 class VentilatorDataset8(Dataset):
 
@@ -657,24 +658,25 @@ class VentilatorDataset8(Dataset):
         data['area_u_in_abs'] = data['u_in_change'] * data['delta_time']
         data['uin_in_time'] = data['u_in_change'] / data['delta_time']
 
-
         data = data.drop(['one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame', 'breath_id_lag2same',
                           'u_out_lag2'], axis=1)
-        cols_to_scale = ['time_step', 'u_in', 'u_out', 'pressure',
-       'RC', 'RandC', 'area', 'cross', 'cross2', 'ewm_u_in_mean',
-       'ewm_u_in_std', 'ewm_u_in_corr', '15_in_max', '15_out_std', '10_in_max',
-       '10_out_std', 'expand_mean', 'expand_max', 'expand_std', 'breath_time',
-       'u_in_lag', 'u_in_lag2', 'u_in_lag-1', 'u_in_lag-2', 'u_out_lag',
-       'u_in_diff1', 'time_step_lag', 'time_step_lag2', 'time_step_lag-1',
-       'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean',
+        cols_to_scale = ['time_step', 'u_in', 'pressure',
+                         'RC', 'RandC', 'area', 'cross', 'cross2', 'ewm_u_in_mean',
+                         'ewm_u_in_std', 'ewm_u_in_corr', '15_in_max', '15_out_std', '10_in_max',
+                         '10_out_std', 'expand_mean', 'expand_max', 'expand_std', 'breath_time',
+                         'u_in_lag', 'u_in_lag2', 'u_in_lag-1', 'u_in_lag-2', 'u_out_lag',
+                         'u_in_diff1', 'time_step_lag', 'time_step_lag2', 'time_step_lag-1',
+                         'time_step_lag-2', 'u_in_cumsum', 'u_in_cummean',
                          'delta_time', 'area_u_in', 'u_in_change', 'area_u_in_abs', 'uin_in_time']
         rs = RobustScaler()
         if normalize:
             if mode == 'train':
+                print('Fitting scaler')
                 data[cols_to_scale] = rs.fit_transform(data[cols_to_scale])
                 with open('rs.joblib', 'wb') as f:
                     joblib.dump(rs, f)
             else:
+                print('Applying scaler')
                 with open('rs.joblib', 'rb') as f:
                     rs = joblib.load(f)
                 data[cols_to_scale] = rs.transform(data[cols_to_scale])
