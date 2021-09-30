@@ -505,7 +505,7 @@ class VentilatorDataset7(Dataset):
 
         data = data.drop(['one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame', 'breath_id_lag2same',
                           'u_out_lag2'], axis=1)
-        cols_to_scale = ['time_step', 'u_in', 'u_out', 'pressure',
+        cols_to_scale = ['time_step', 'u_in', 'pressure',
                          'RC', 'RandC', 'area', 'cross', 'cross2', 'ewm_u_in_mean',
                          'ewm_u_in_std', 'ewm_u_in_corr', '15_in_max', '15_out_std', '10_in_max',
                          '10_out_std', 'expand_mean', 'expand_max', 'expand_std', 'breath_time',

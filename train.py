@@ -78,7 +78,10 @@ def run(cfg: DictConfig) -> None:
             torch.save(model.model.state_dict(), model_name)
 
     if cfg.general.predict:
-        sub = pd.read_csv(os.path.join(cfg.datamodule.path, 'sample_submission.csv'))
+        if cfg.training.debug:
+            sub = pd.read_csv(os.path.join(cfg.datamodule.path, 'sample_submission.csv'), nrows=800)
+        else:
+            sub = pd.read_csv(os.path.join(cfg.datamodule.path, 'sample_submission.csv'))
         prediction = trainer.predict(model, dm.test_dataloader())
         predictions = []
         for pred in prediction:

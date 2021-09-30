@@ -21,8 +21,12 @@ class ImagenetteDataModule(pl.LightningDataModule):
         pass
 
     def setup(self, stage=None):
-        train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
-        test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
+        if self.cfg.training.debug:
+            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=800)
+            test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'), nrows=800)
+        else:
+            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
+            test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
 
         if self.cfg.datamodule.split == 'GroupKFold':
             gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)
