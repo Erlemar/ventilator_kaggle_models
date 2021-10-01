@@ -1,0 +1,15 @@
+class_name: src.models.ventilator_model_8.VentilatorNet
+params:
+  input_dim: 7
+  lstm_dim: 512
+  dense_dim: 512
+  logit_dim: 256
+  d_model: 512
+  nhead: 8
+  num_layers: 6
+  n_classes: ${training.n_classes}
+  activation: torch.nn.PReLU
+  use_mlp: True
+  use_transformer: True
+  use_only_transformer_encoder: False
+  use_lstm: True

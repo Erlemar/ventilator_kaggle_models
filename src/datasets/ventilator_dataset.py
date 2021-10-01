@@ -741,3 +741,160 @@ class VentilatorDataset8(Dataset):
 
     def __len__(self) -> int:
         return len(self.data)
+
+class VentilatorDataset9(Dataset):
+
+    def __init__(self,
+                 data: pd.DataFrame,
+                 mode: str = '',
+                 normalize: bool = False,
+                 ):
+        """
+        from 8
+
+        Args:
+            data: dataframe with image id and bboxes
+            mode: train/val/test
+            img_path: path to images
+            transforms: albumentations
+        """
+        if "pressure" not in data.columns:
+            data['pressure'] = 0
+
+        data['RdivC'] = data['R'] / data['C']
+        data['RaddC'] = data['R'] + data['C']
+
+        data['area'] = data['time_step'] * data['u_in']
+        data['area'] = data.groupby('breath_id')['area'].cumsum()
+        data['cross'] = data['u_in'] * data['u_out']
+        data['cross2'] = data['time_step'] * data['u_out']
+
+        data['breath_id_lag'] = data.groupby('breath_id')['breath_id'].shift(1).fillna(0)
+        data['breath_id_lag2'] = data.groupby('breath_id')['breath_id'].shift(1).fillna(0)
+        data['breath_id_lagsame'] = np.select([data['breath_id_lag'] == data['breath_id']], [1], 0)
+        data['breath_id_lag2same'] = np.select([data['breath_id_lag2'] == data['breath_id']], [1], 0)
+
+        data['ewm_u_in_mean'] = data.groupby('breath_id')['u_in'].ewm(halflife=8).mean().reset_index(level=0, drop=True)
+        data['ewm_u_in_std'] = data.groupby('breath_id')['u_in'].ewm(halflife=9).std().reset_index(level=0, drop=True)
+        data['ewm_u_in_corr'] = data.groupby('breath_id')['u_in'].ewm(halflife=14).corr().reset_index(level=0,
+                                                                                                      drop=True)
+        data[["15_in_max", "15_out_std"]] = data.groupby('breath_id')['u_in'].rolling(window=15, min_periods=1).agg(
+            {"15_in_max": "max", "15_in_std": "std"}).reset_index(level=0, drop=True)
+        data[["10_in_max", "10_out_std"]] = data.groupby('breath_id')['u_in'].rolling(window=10, min_periods=1).agg(
+            {"15_in_max": "max", "15_in_std": "std"}).reset_index(level=0, drop=True)
+
+        data['expand_mean'] = data.groupby('breath_id')['u_in'].expanding(2).mean().reset_index(level=0, drop=True)
+        data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
+        data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
+
+        data['breath_time'] = data['time_step'] - data.groupby('breath_id')['time_step'].shift(1)
+        data['u_in_lag'] = data.groupby('breath_id')['u_in'].shift(1)
+        data['u_in_lag'] = data['u_in_lag'] * data['breath_id_lagsame']
+        data['u_in_lag2'] = data.groupby('breath_id')['u_in'].shift(2)
+        data['u_in_lag2'] = data['u_in_lag2'] * data['breath_id_lag2same']
+        data['u_in_lag-1'] = data.groupby('breath_id')['u_in'].shift(-1)
+        data['u_in_lag-2'] = data.groupby('breath_id')['u_in'].shift(-2)
+        data['u_out_lag'] = data.groupby('breath_id')['u_out'].shift(1)
+        data['u_out_lag2'] = data.groupby('breath_id')['u_out'].shift(2)
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag']
+        data['u_out_lag2'] = data['u_out_lag2'] * data['breath_id_lag2same']
+
+        data['time_step_lag'] = data.groupby('breath_id')['time_step'].shift(1)
+        data['time_step_lag2'] = data.groupby('breath_id')['time_step'].shift(2)
+        data['time_step_lag-1'] = data.groupby('breath_id')['time_step'].shift(-1)
+        data['time_step_lag-2'] = data.groupby('breath_id')['time_step'].shift(-2)
+        data['breath_time'] = data['time_step'] - data['time_step_lag']
+
+        data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
+        data['one'] = 1
+        data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
+        data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
+
+        data['delta_time'] = data['time_step_lag'] - data['time_step']
+        data['area_u_in'] = data['u_in'] * data['delta_time']
+        data['u_in_change'] = data['u_in_lag-1'] - data['u_in']
+        data['area_u_in_abs'] = data['u_in_change'] * data['delta_time']
+        data['uin_in_time'] = data['u_in_change'] / data['delta_time']
+
+        data = data.drop(['one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame', 'breath_id_lag2same',
+                          'u_out_lag2'], axis=1)
+        data['R'] = data['R'].astype(str)
+        data['C'] = data['C'].astype(str)
+        data['RC'] = data['R'] + data['C']
+        data = pd.get_dummies(data)
+
+        self.data = data.fillna(0).groupby('breath_id').agg(list).reset_index()
+
+        self.pressures = np.array(self.data['pressure'].values.tolist())
+        u_ins = np.array(self.data['u_in'].values.tolist())
+
+        self.u_outs = np.array(self.data['u_out'].values.tolist())
+        # self.rs = np.array(self.data['R'].values.tolist())
+        # self.cs = np.array(self.data['C'].values.tolist())
+
+        self.inputs = np.concatenate([
+            u_ins[:, None],
+            np.array(self.data['u_in_cumsum'].values.tolist())[:, None],
+            self.u_outs[:, None],
+            np.array(self.data['RdivC'].values.tolist())[:, None],
+            np.array(self.data['RaddC'].values.tolist())[:, None],
+            np.array(self.data['breath_time'].values.tolist())[:, None],
+            np.array(self.data['u_in_diff1'].values.tolist())[:, None],
+            np.array(self.data['time_step'].values.tolist())[:, None],
+            np.array(self.data['u_in_lag'].values.tolist())[:, None],
+            np.array(self.data['u_in_lag2'].values.tolist())[:, None],
+            np.array(self.data['u_in_lag-1'].values.tolist())[:, None],
+            np.array(self.data['u_in_lag-2'].values.tolist())[:, None],
+            np.array(self.data['area'].values.tolist())[:, None],
+            np.array(self.data['ewm_u_in_mean'].values.tolist())[:, None],
+            np.array(self.data['ewm_u_in_std'].values.tolist())[:, None],
+            np.array(self.data['15_in_max'].values.tolist())[:, None],
+            np.array(self.data['15_out_std'].values.tolist())[:, None],
+            np.array(self.data['10_in_max'].values.tolist())[:, None],
+            np.array(self.data['10_out_std'].values.tolist())[:, None],
+            np.array(self.data['time_step_lag'].values.tolist())[:, None],
+            np.array(self.data['time_step_lag2'].values.tolist())[:, None],
+            np.array(self.data['time_step_lag-1'].values.tolist())[:, None],
+            np.array(self.data['time_step_lag-2'].values.tolist())[:, None],
+            np.array(self.data['u_out_lag'].values.tolist())[:, None],
+            np.array(self.data['cross'].values.tolist())[:, None],
+            np.array(self.data['cross2'].values.tolist())[:, None],
+            np.array(self.data['u_in_cummean'].values.tolist())[:, None],
+            np.array(self.data['expand_mean'].values.tolist())[:, None],
+            np.array(self.data['expand_max'].values.tolist())[:, None],
+            np.array(self.data['expand_std'].values.tolist())[:, None],
+            np.array(self.data['delta_time'].values.tolist())[:, None],
+            np.array(self.data['area_u_in'].values.tolist())[:, None],
+            np.array(self.data['u_in_change'].values.tolist())[:, None],
+            np.array(self.data['area_u_in_abs'].values.tolist())[:, None],
+            np.array(self.data['uin_in_time'].values.tolist())[:, None],
+            np.array(self.data['R_20'].values.tolist())[:, None],
+            np.array(self.data['R_5'].values.tolist())[:, None],
+            np.array(self.data['R_50'].values.tolist())[:, None],
+            np.array(self.data['C_10'].values.tolist())[:, None],
+            np.array(self.data['C_20'].values.tolist())[:, None],
+            np.array(self.data['C_50'].values.tolist())[:, None],
+            np.array(self.data['RC_2010'].values.tolist())[:, None],
+            np.array(self.data['RC_2020'].values.tolist())[:, None],
+            np.array(self.data['RC_2050'].values.tolist())[:, None],
+            np.array(self.data['RC_5010'].values.tolist())[:, None],
+            np.array(self.data['RC_5020'].values.tolist())[:, None],
+            np.array(self.data['RC_5050'].values.tolist())[:, None],
+            np.array(self.data['RC_510'].values.tolist())[:, None],
+            np.array(self.data['RC_520'].values.tolist())[:, None],
+            np.array(self.data['RC_550'].values.tolist())[:, None],
+        ], 1).transpose(0, 2, 1)
+
+    def __getitem__(self, idx: int) -> Dict[str, npt.ArrayLike]:
+        data = {
+            "input": torch.tensor(self.inputs[idx], dtype=torch.float),
+            "u_out": torch.tensor(self.u_outs[idx], dtype=torch.float),
+            # "r": torch.tensor(self.rs[:, None][idx], dtype=torch.long),
+            # "c": torch.tensor(self.cs[:, None][idx], dtype=torch.long),
+            "p": torch.tensor(self.pressures[idx], dtype=torch.float),
+        }
+
+        return data
+
+    def __len__(self) -> int:
+        return len(self.data)

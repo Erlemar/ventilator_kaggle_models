@@ -22,8 +22,8 @@ class ImagenetteDataModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         if self.cfg.training.debug:
-            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=800)
-            test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'), nrows=800)
+            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=196000)
+            test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'), nrows=80000)
         else:
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
             test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
