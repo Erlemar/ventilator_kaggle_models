@@ -1,6 +1,6 @@
 import argparse
 
-import comet_ml
+# import comet_ml
 import pandas as pd
 from hydra import initialize, compose
 from omegaconf import DictConfig
