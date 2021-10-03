@@ -50,7 +50,7 @@ class VentilatorDataset10(Dataset):
         columns = ['time_step', 'u_in', 'u_out', 'RC_sum', 'RC_div', 'R_20', 'R_5', 'R_50', 'C_10', 'C_20', 'C_50',
                    'RC_2010', 'RC_2020', 'RC_2050', 'RC_5010', 'RC_5020', 'RC_5050', 'RC_510', 'RC_520', 'RC_550',
                    'u_in_cumsum', 'time_step_lag', 'u_in_lag', 'u_out_lag']
-
+        columns = list(set(columns))
         print(f'{columns=}')
 
         data = data[columns].fillna(0)
@@ -254,6 +254,7 @@ class VentilatorDataset12(Dataset):
                    'area', 'cross', 'cross2', 'u_in_cummean', 'u_in_lag_', 'u_in_lag2_']
 
         print(f'{columns=}')
+        columns = list(set(columns))
 
         data = data[columns].fillna(0)
 
