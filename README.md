@@ -107,3 +107,20 @@ def find_nearest(prediction):
     upper_val = sorted_pressures[insert_idx]
     return lower_val if abs(lower_val - prediction) < abs(upper_val - prediction) else upper_val
 ```
+
+```shell
+python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=10 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset10 model=ventilator_model_9 general.log_code=False model.params.input_dim=24 model.params.dense_dim=24 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1
+
+python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=10 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset11 model=ventilator_model_9 general.log_code=False model.params.input_dim=35 model.params.dense_dim=35 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1
+
+python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=10 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset12 model=ventilator_model_9 general.log_code=False model.params.input_dim=30 model.params.dense_dim=30 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1
+
+
+python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=10 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_9 general.log_code=False model.params.input_dim=58 model.params.dense_dim=58 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1
+
+#! normalize
+python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=2 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_9 general.log_code=False model.params.input_dim=58 model.params.dense_dim=58 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1 datamodule.normalize=True
+
+# all datasets with this model. NHEAD
+python train.py datamodule.num_workers=0 datamodule.batch_size=32 trainer.max_epochs=2 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_8 general.log_code=False model.params.input_dim=58 model.params.use_mlp=False model.params.nhead=2 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1 datamodule.normalize=True
+```
