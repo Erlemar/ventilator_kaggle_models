@@ -53,8 +53,7 @@ class VentilatorDataset10(Dataset):
 
         print(f'{columns=}')
 
-        self.data = data[columns].fillna(0).values
-        del data
+        data = data[columns].fillna(0).values
         cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
         print(f'{cols_to_scale=}')
         rs = RobustScaler()
@@ -158,8 +157,7 @@ class VentilatorDataset11(Dataset):
 
         print(f'{columns=}')
 
-        self.data = data[columns].fillna(0).values
-        del data
+        data = data[columns].fillna(0).values
         cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
         print(f'{cols_to_scale=}')
         rs = RobustScaler()
@@ -257,8 +255,7 @@ class VentilatorDataset12(Dataset):
 
         print(f'{columns=}')
 
-        self.data = data[columns].fillna(0).values
-        del data
+        data = data[columns].fillna(0).values
 
         cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
         print(f'{cols_to_scale=}')
@@ -411,6 +408,7 @@ class VentilatorDataset13(Dataset):
 'cross2',]
 
         print(f'{columns=}')
+        data = data[columns].fillna(0).values
 
         cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
         print(f'{cols_to_scale=}')
