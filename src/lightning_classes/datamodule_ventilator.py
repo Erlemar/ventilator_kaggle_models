@@ -7,7 +7,7 @@ from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 from torch.utils.data import DataLoader
 
 from src.utils.technical_utils import load_obj
-
+import gc
 
 class ImagenetteDataModule(pl.LightningDataModule):
     def __init__(self, cfg: DictConfig):
@@ -38,6 +38,9 @@ class ImagenetteDataModule(pl.LightningDataModule):
 
         train_df = train.iloc[train_idx].copy().reset_index(drop=True)
         valid_df = train.iloc[valid_idx].copy().reset_index(drop=True)
+
+        del train
+        gc.collect()
 
         # train dataset
         dataset_class = load_obj(self.cfg.datamodule.class_name)

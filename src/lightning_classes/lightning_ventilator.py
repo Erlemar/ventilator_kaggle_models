@@ -10,6 +10,7 @@ class LitImageClassification(pl.LightningModule):
         super(LitImageClassification, self).__init__()
         self.cfg = cfg
         self.model = load_obj(cfg.model.class_name)(**self.cfg.model.params)
+        print(self.model)
         self.loss = load_obj(cfg.loss.class_name)()
         self.metrics = torch.nn.ModuleDict(
             {
