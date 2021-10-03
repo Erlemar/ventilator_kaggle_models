@@ -85,3 +85,25 @@ torch.nn.GELU
 
 
 ```
+
+Ideas:
+https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess/notebook
+Since there are discrete number of pressure values (950), we are rounding the predictions to the nearest neighbors of that target values (pressures).
+```python
+unique_pressures = df_train["pressure"].unique()
+sorted_pressures = np.sort(unique_pressures)
+total_pressures_len = len(sorted_pressures)
+
+def find_nearest(prediction):
+    insert_idx = np.searchsorted(sorted_pressures, prediction)
+    if insert_idx == total_pressures_len:
+        # If the predicted value is bigger than the highest pressure in the train dataset,
+        # return the max value.
+        return sorted_pressures[-1]
+    elif insert_idx == 0:
+        # Same control but for the lower bound.
+        return sorted_pressures[0]
+    lower_val = sorted_pressures[insert_idx - 1]
+    upper_val = sorted_pressures[insert_idx]
+    return lower_val if abs(lower_val - prediction) < abs(upper_val - prediction) else upper_val
+```

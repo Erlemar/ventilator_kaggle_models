@@ -9,7 +9,7 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
-from src.utils.technical_utils import load_obj, convert_to_jit
+from src.utils.technical_utils import load_obj
 from src.utils.utils import set_seed, save_useful_info
 
 warnings.filterwarnings('ignore')
