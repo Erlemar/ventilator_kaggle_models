@@ -54,7 +54,7 @@ class VentilatorDataset10(Dataset):
         print(f'{columns=}')
 
         data = data[columns].fillna(0)
-        cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
+        cols_to_scale = [col for col in columns if 'R_' not in col and 'C_' not in col and 'RC' not in col]
         print(f'{cols_to_scale=}')
         rs = RobustScaler()
         if normalize:
@@ -158,7 +158,7 @@ class VentilatorDataset11(Dataset):
         print(f'{columns=}')
 
         data = data[columns].fillna(0)
-        cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
+        cols_to_scale = [col for col in columns if 'R_' not in col and 'C_' not in col and 'RC' not in col]
         print(f'{cols_to_scale=}')
         rs = RobustScaler()
         if normalize:
@@ -257,7 +257,7 @@ class VentilatorDataset12(Dataset):
 
         data = data[columns].fillna(0)
 
-        cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
+        cols_to_scale = [col for col in columns if 'R_' not in col and 'C_' not in col and 'RC' not in col]
         print(f'{cols_to_scale=}')
         rs = RobustScaler()
         if normalize:
@@ -406,11 +406,12 @@ class VentilatorDataset13(Dataset):
 'u_out_diff4',
 'cross',
 'cross2',]
+        columns = list(set(columns))
 
         print(f'{columns=}')
         data = data[columns].fillna(0)
 
-        cols_to_scale = [col for col in columns if 'R_' not in col or 'C_' not in col or 'RC' not in col]
+        cols_to_scale = [col for col in columns if 'R_' not in col and 'C_' not in col and 'RC' not in col]
         print(f'{cols_to_scale=}')
         rs = RobustScaler()
         if normalize:
@@ -426,8 +427,8 @@ class VentilatorDataset13(Dataset):
                 data[cols_to_scale] = rs.transform(data[cols_to_scale])
 
         self.data = data[columns].fillna(0).values
+        # print('data', data.shape, len(columns), self.data.shape)
         del data
-
         self.data = self.data.reshape(-1, 80, len(columns))
 
     def __getitem__(self, idx: int) -> Dict[str, npt.ArrayLike]:
