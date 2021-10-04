@@ -6,3 +6,5 @@ params:
   logit_dim: 512
   num_layers: 1
   n_classes: ${training.n_classes}
+  initialize: True
+  init_style: 1

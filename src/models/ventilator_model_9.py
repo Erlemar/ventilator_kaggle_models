@@ -1,4 +1,5 @@
 from torch import nn
+from torch.nn import init
 
 
 class VentilatorNet(nn.Module):
@@ -9,6 +10,8 @@ class VentilatorNet(nn.Module):
                  logit_dim: int = 256,
                  num_layers: int = 256,
                  n_classes: int = 1,
+                 initialize: bool = True,
+                 init_style: int = 1,
                  ) -> None:
         """
         Model class.
@@ -33,6 +36,120 @@ class VentilatorNet(nn.Module):
             nn.SELU(),
             nn.Linear(logit_dim, n_classes),
         )
+
+        if initialize:
+            if init_style == 1:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.LSTM):
+                        for param in m.parameters():
+                            if len(param.shape) >= 2:
+                                nn.init.orthogonal_(param.data)
+                            else:
+                                nn.init.normal_(param.data)
+                    elif isinstance(m, (nn.Linear, nn.Embedding)):
+                        m.weight.data.normal_(mean=0.0, std=1.0)
+                        if isinstance(m, nn.Linear):
+                            if m.bias is not None:
+                                m.bias.data.zero_()
+
+            elif init_style == 2:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.LSTM):
+                        for param in m.parameters():
+                            if len(param.shape) >= 2:
+                                nn.init.xavier_uniform_(param.data)
+                            else:
+                                nn.init.normal_(param.data)
+                    elif isinstance(m, (nn.Linear, nn.Embedding)):
+                        m.weight.data.normal_(mean=0.0, std=1.0)
+                        if isinstance(m, nn.Linear):
+                            if m.bias is not None:
+                                m.bias.data.zero_()
+
+            elif init_style == 3:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.LSTM):
+                        for name, param in m.named_parameters():
+                            if 'weight_ih' in name:
+                                nn.init.xavier_uniform_(param.data)
+                            elif 'weight_hh' in name:
+                                nn.init.orthogonal_(param.data)
+                            elif 'bias' in name:
+                                param.data.fill_(0)
+
+                    elif isinstance(m, (nn.Linear, nn.Embedding)):
+                        m.weight.data.normal_(mean=0.0, std=1.0)
+                        if isinstance(m, nn.Linear):
+                            if m.bias is not None:
+                                m.bias.data.zero_()
+
+            elif init_style == 4:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.LSTM):
+                        for name, param in m.named_parameters():
+                            if 'weight_ih' in name:
+                                nn.init.kaiming_normal_(param.data)
+                            elif 'weight_hh' in name:
+                                nn.init.orthogonal_(param.data)
+                            elif 'bias' in name:
+                                nn.init.constant_(param, 0.0)
+
+                    elif isinstance(m, (nn.Linear, nn.Embedding)):
+                        m.weight.data.normal_(mean=0.0, std=1.0)
+                        if isinstance(m, nn.Linear):
+                            if m.bias is not None:
+                                m.bias.data.zero_()
+
+            elif init_style == 5:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.LSTM):
+                        for name, param in m.named_parameters():
+                            if 'weight_ih' in name:
+                                nn.init.kaiming_normal_(param.data)
+                            elif 'weight_hh' in name:
+                                nn.init.orthogonal_(param.data)
+                            elif 'bias' in name:
+                                nn.init.constant_(param, 0.0)
+
+                    elif isinstance(m, (nn.Linear, nn.Embedding)):
+                        nn.init.xavier_normal_(m.weight.data)
+                        if isinstance(m, nn.Linear):
+                            if m.bias is not None:
+                                m.bias.data.zero_()
+
+            elif init_style == 6:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.LSTM):
+                        for name, param in m.named_parameters():
+                            if 'weight_ih' in name:
+                                nn.init.kaiming_normal_(param.data)
+                            elif 'weight_hh' in name:
+                                nn.init.orthogonal_(param.data)
+                            elif 'bias' in name:
+                                nn.init.constant_(param, 0.0)
+
+                    elif isinstance(m, (nn.Linear, nn.Embedding)):
+                        nn.init.xavier_uniform_(m.weight.data)
+                        if isinstance(m, nn.Linear):
+                            if m.bias is not None:
+                                m.bias.data.zero_()
+
+            elif init_style == 7:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.LSTM):
+                        for name, param in m.named_parameters():
+                            if 'weight_ih' in name:
+                                nn.init.kaiming_normal_(param.data)
+                            elif 'weight_hh' in name:
+                                nn.init.orthogonal_(param.data)
+                            elif 'bias' in name:
+                                nn.init.constant_(param, 0.0)
+
+                    elif isinstance(m, (nn.Linear, nn.Embedding)):
+                        nn.init.xavier_uniform_(m.weight.data)
+                        if isinstance(m, nn.Linear):
+                            if m.bias is not None:
+                                nn.init.constant_(m.bias.data, 0)
 
     def forward(self, x):
         # features = self.mlp(x['input'])

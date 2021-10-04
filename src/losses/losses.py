@@ -16,6 +16,13 @@ class VentilatorLoss(nn.Module):
 
         return mae
 
+class MAE(nn.Module):
+    """
+    Directly optimizes the competition metric
+    """
+    def __call__(self, preds, y, u_out):
+        # print(preds.shape, y.shape)
+        return torch.nn.L1Loss(preds, y).mean()
 
 class DenseCrossEntropy(nn.Module):
     # Taken from: https://www.kaggle.com/pestipeti/plant-pathology-2020-pytorch

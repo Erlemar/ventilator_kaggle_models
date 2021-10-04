@@ -119,8 +119,19 @@ python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_e
 python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=10 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_9 general.log_code=False model.params.input_dim=58 model.params.dense_dim=58 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1
 
 #! normalize
-python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=2 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_9 general.log_code=False model.params.input_dim=58 model.params.dense_dim=58 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1 datamodule.normalize=True
+python train.py datamodule.num_workers=0 datamodule.batch_size=256 trainer.max_epochs=2 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_9 general.log_code=False model.params.input_dim=55 model.params.dense_dim=55 model.params.lstm_dim=400 model.params.logit_dim=50 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1 datamodule.normalize=True
 
 # all datasets with this model. NHEAD
-python train.py datamodule.num_workers=0 datamodule.batch_size=32 trainer.max_epochs=2 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_8 general.log_code=False model.params.input_dim=58 model.params.use_mlp=False model.params.nhead=2 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1 datamodule.normalize=True
+python train.py datamodule.num_workers=0 datamodule.batch_size=32 trainer.max_epochs=2 callbacks.early_stopping.params.patience=50 datamodule.class_name=src.datasets.ventilator_dataset1.VentilatorDataset13 model=ventilator_model_8 general.log_code=False model.params.input_dim=50 model.params.use_mlp=False model.params.nhead=2 datamodule.fold_n=0 scheduler=step training.debug=False trainer.gpus=1 datamodule.normalize=True
+
+plateau?
+simple mae?
+lstm bias false
+
+lstm dropout
+
+small decay 0.9999
+adamw
+initialize
+
 ```

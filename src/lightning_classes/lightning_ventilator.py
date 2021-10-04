@@ -4,7 +4,6 @@ from omegaconf import DictConfig
 
 from src.utils.technical_utils import load_obj
 
-
 class LitImageClassification(pl.LightningModule):
     def __init__(self, cfg: DictConfig):
         super(LitImageClassification, self).__init__()
@@ -38,7 +37,8 @@ class LitImageClassification(pl.LightningModule):
 
         return (
             [optimizer],
-            [{'scheduler': scheduler, 'interval': self.cfg.scheduler.step, 'monitor': self.cfg.scheduler.monitor}],
+            [{'scheduler': scheduler, 'interval': self.cfg.scheduler.step, 'monitor': self.cfg.scheduler.monitor,
+              'name': self.cfg.scheduler.class_name}],
         )
 
     def training_step(self, batch, *args, **kwargs):  # type: ignore
@@ -46,8 +46,10 @@ class LitImageClassification(pl.LightningModule):
         # pred = self(data).squeeze(-1)
         pred = self(batch).squeeze(-1)
         # print('pred', pred)
-
-        loss = self.loss(pred, batch['p'], batch['u_out']).mean()
+        if self.cfg.loss.class_name == 'torch.nn.L1Loss':
+            loss = self.loss(pred, batch['p']).mean()
+        else:
+            loss = self.loss(pred, batch['p'], batch['u_out']).mean()
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         for metric in self.metrics:
@@ -59,7 +61,10 @@ class LitImageClassification(pl.LightningModule):
         # data = batch['input']
         # pred = self(data).squeeze(-1)
         pred = self(batch).squeeze(-1)
-        loss = self.loss(pred, batch['p'], batch['u_out']).mean()
+        if self.cfg.loss.class_name == 'torch.nn.L1Loss':
+            loss = self.loss(pred, batch['p']).mean()
+        else:
+            loss = self.loss(pred, batch['p'], batch['u_out']).mean()
         self.log('valid_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         for metric in self.metrics:
