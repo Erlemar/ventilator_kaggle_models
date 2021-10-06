@@ -152,6 +152,7 @@ class VentilatorNet(nn.Module):
                                 nn.init.constant_(m.bias.data, 0)
 
             elif init_style == 8:
+                print(f'{init_style}')
                 for n, m in self.named_modules():
                     if isinstance(m, nn.Conv2d or nn.Linear or nn.GRU or nn.LSTM):
                         nn.init.xavier_normal_(m.weight)
