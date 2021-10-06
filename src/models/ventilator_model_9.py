@@ -151,6 +151,15 @@ class VentilatorNet(nn.Module):
                             if m.bias is not None:
                                 nn.init.constant_(m.bias.data, 0)
 
+            elif init_style == 8:
+                for n, m in self.named_modules():
+                    if isinstance(m, nn.Conv2d or nn.Linear or nn.GRU or nn.LSTM):
+                        nn.init.xavier_normal_(m.weight)
+                        m.bias.data.zero_()
+                    elif isinstance(m, nn.BatchNorm2d or nn.BatchNorm1d):
+                        m.weight.data.fill_(1)
+                        m.bias.data.zero_()
+
     def forward(self, x):
         # features = self.mlp(x['input'])
         # print("x", x['input'].shape)
