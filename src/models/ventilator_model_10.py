@@ -69,7 +69,7 @@ class VentilatorNet(nn.Module):
                     )
                 elif layer_norm_style == 3:
                     self.mlp = nn.Sequential(
-                        nn.BatchNorm1d(input_dim),
+                        nn.BatchNorm1d(80),
                         nn.Linear(input_dim, dense_dim // 2),
                         load_obj(activation)(),
                         nn.LayerNorm(dense_dim // 2),
