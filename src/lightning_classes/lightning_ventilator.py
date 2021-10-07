@@ -4,9 +4,9 @@ from omegaconf import DictConfig
 
 from src.utils.technical_utils import load_obj
 
-class LitImageClassification(pl.LightningModule):
+class VentilatorRegression(pl.LightningModule):
     def __init__(self, cfg: DictConfig):
-        super(LitImageClassification, self).__init__()
+        super(VentilatorRegression, self).__init__()
         self.cfg = cfg
         self.model = load_obj(cfg.model.class_name)(**self.cfg.model.params)
         print(self.model)
@@ -54,7 +54,7 @@ class LitImageClassification(pl.LightningModule):
 
         for metric in self.metrics:
             score = self.metrics[metric](pred, batch['p'], batch['u_out']).mean()
-            self.log(f'train_{metric}', score, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+            self.log(f'train_{metric}', score, on_step=True, on_epoch=True, prog_bar=False, logger=True)
         return loss
 
     def validation_step(self, batch, *args, **kwargs):  # type: ignore

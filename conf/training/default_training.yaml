@@ -4,4 +4,4 @@ mode: "min"
 seed: 42
 debug: False
 n_classes: 1
-lightning_module_name: src.lightning_classes.lightning_ventilator.LitImageClassification
+lightning_module_name: src.lightning_classes.lightning_ventilator.VentilatorRegression

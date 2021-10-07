@@ -1,6 +1,8 @@
 from torch import nn
 from torch.nn import init
 
+from src.utils.technical_utils import load_obj
+
 
 class VentilatorNet(nn.Module):
     def __init__(self,
@@ -12,6 +14,15 @@ class VentilatorNet(nn.Module):
                  n_classes: int = 1,
                  initialize: bool = True,
                  init_style: int = 1,
+                 use_mlp: bool = True,
+                 simpler_mlp: bool = True,
+                 activation: str = 'torch.nn.PReLU',
+                 activation2: str = 'torch.nn.PReLU',
+                 use_layer_norm: bool = False,
+                 layer_norm_logits: bool = False,
+                 layer_norm_style: int = 1,
+                 lstm_dropout: float = 0.0,
+                 dropout: float = 0.0,
                  ) -> None:
         """
         Model class.
@@ -20,22 +31,90 @@ class VentilatorNet(nn.Module):
             cfg: main config
         """
         super().__init__()
-        # self.mlp = nn.Sequential(
-        #     nn.Linear(input_dim, dense_dim // 2),
-        #     nn.ReLU(),
-        #     nn.Linear(dense_dim // 2, dense_dim),
-        #     nn.ReLU(),
-        # )
-        self.lstm0 = nn.LSTM(dense_dim, lstm_dim // 2, batch_first=True, bidirectional=True, num_layers=num_layers)
-        self.lstm1 = nn.LSTM(lstm_dim, (lstm_dim - 100) // 2, batch_first=True, bidirectional=True, num_layers=num_layers)
-        self.lstm2 = nn.LSTM(lstm_dim - 100, (lstm_dim - 200) // 2, batch_first=True, bidirectional=True, num_layers=num_layers)
-        self.lstm3 = nn.LSTM(lstm_dim - 200, (lstm_dim - 300) // 2, batch_first=True, bidirectional=True, num_layers=num_layers)
+        self.use_mlp = use_mlp
+        if self.use_mlp:
+            if not use_layer_norm:
+                if not simpler_mlp:
+                    self.mlp = nn.Sequential(
+                        nn.Linear(input_dim, dense_dim // 2),
+                        load_obj(activation)(),
+                        nn.Linear(dense_dim // 2, dense_dim),
+                        load_obj(activation)(),
+                        nn.Dropout(dropout),
+                    )
+                elif simpler_mlp and layer_norm_style != 5:
+                    self.mlp = nn.Sequential(
+                        nn.Linear(input_dim, dense_dim),
+                        load_obj(activation)(),
+                        nn.Dropout(dropout),
+                    )
+            else:
+                if layer_norm_style == 1:
+                    self.mlp = nn.Sequential(
+                        nn.Linear(input_dim, dense_dim // 2),
+                        load_obj(activation)(),
+                        nn.Linear(dense_dim // 2, dense_dim),
+                        load_obj(activation)(),
+                        nn.LayerNorm(dense_dim),
+                        nn.Dropout(dropout),
+                    )
+                elif layer_norm_style == 2:
+                    self.mlp = nn.Sequential(
+                        nn.Linear(input_dim, dense_dim // 2),
+                        load_obj(activation)(),
+                        nn.LayerNorm(dense_dim),
+                        nn.Linear(dense_dim // 2, dense_dim),
+                        load_obj(activation)(),
+                        nn.Dropout(dropout),
+                    )
+                elif layer_norm_style == 3:
+                    self.mlp = nn.Sequential(
+                        nn.BatchNorm1d(input_dim),
+                        nn.Linear(input_dim, dense_dim // 2),
+                        load_obj(activation)(),
+                        nn.LayerNorm(dense_dim),
+                        nn.Linear(dense_dim // 2, dense_dim),
+                        load_obj(activation)(),
+                        nn.Dropout(dropout),
+                    )
+                elif layer_norm_style == 4:
+                    self.mlp = nn.Sequential(
+                        nn.Linear(input_dim, dense_dim // 2),
+                        load_obj(activation)(),
+                        nn.LayerNorm(dense_dim),
+                        nn.Linear(dense_dim // 2, dense_dim),
+                        load_obj(activation)(),
+                        nn.LayerNorm(dense_dim),
+                        nn.Dropout(dropout),
+                    )
+                elif simpler_mlp and layer_norm_style == 5:
+                    self.mlp = nn.Sequential(
+                        nn.Linear(input_dim, dense_dim),
+                        nn.LayerNorm(dense_dim),
+                        load_obj(activation)(),
+                        nn.Dropout(dropout),
+                    )
+        else:
+            dense_dim = input_dim
 
-        self.logits = nn.Sequential(
-            nn.Linear(lstm_dim - 300, logit_dim),
-            nn.SELU(),
-            nn.Linear(logit_dim, n_classes),
-        )
+        self.lstm0 = nn.LSTM(dense_dim, lstm_dim // 2, batch_first=True, bidirectional=True, num_layers=num_layers, dropout=lstm_dropout)
+        self.lstm1 = nn.LSTM(lstm_dim, lstm_dim // 4, batch_first=True, bidirectional=True, num_layers=num_layers, dropout=lstm_dropout)
+        self.lstm2 = nn.LSTM(lstm_dim // 2, lstm_dim // 8, batch_first=True, bidirectional=True, num_layers=num_layers, dropout=lstm_dropout)
+        self.lstm3 = nn.LSTM(lstm_dim // 4, lstm_dim // 16, batch_first=True, bidirectional=True, num_layers=num_layers, dropout=lstm_dropout)
+
+        if not layer_norm_logits:
+            self.logits = nn.Sequential(
+                nn.Linear(lstm_dim // 8, logit_dim),
+                load_obj(activation2)(),
+                nn.Linear(logit_dim, n_classes),
+            )
+        else:
+            self.logits = nn.Sequential(
+                nn.Linear(lstm_dim // 8, logit_dim),
+                nn.LayerNorm(logit_dim),
+                load_obj(activation2)(),
+                nn.Linear(logit_dim, n_classes),
+            )
 
         if initialize:
             if init_style == 0:
@@ -188,9 +267,13 @@ class VentilatorNet(nn.Module):
                         nn.init.xavier_normal_(m.weight_hh_l0_reverse)
 
     def forward(self, x):
-        # features = self.mlp(x['input'])
+
+        if self.use_mlp:
+            features = self.mlp(x['input'])
+        else:
+            features = x['input']
         # print("x", x['input'].shape)
-        features, _ = self.lstm0(x['input'])
+        features, _ = self.lstm0(features)
         features, _ = self.lstm1(features)
         features, _ = self.lstm2(features)
         features, _ = self.lstm3(features)
