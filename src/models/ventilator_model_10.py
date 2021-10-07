@@ -94,6 +94,14 @@ class VentilatorNet(nn.Module):
                         load_obj(activation)(),
                         nn.Dropout(dropout),
                     )
+                else:
+                    print(f'{simpler_mlp=}')
+                    print(f'{layer_norm_style=}')
+                    self.mlp = nn.Sequential(
+                        nn.Linear(input_dim, dense_dim),
+                        load_obj(activation)(),
+                        nn.Dropout(dropout),
+                    )
         else:
             dense_dim = input_dim
 
