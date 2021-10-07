@@ -62,7 +62,7 @@ class VentilatorNet(nn.Module):
                     self.mlp = nn.Sequential(
                         nn.Linear(input_dim, dense_dim // 2),
                         load_obj(activation)(),
-                        nn.LayerNorm(dense_dim),
+                        nn.LayerNorm(dense_dim // 2),
                         nn.Linear(dense_dim // 2, dense_dim),
                         load_obj(activation)(),
                         nn.Dropout(dropout),
@@ -72,7 +72,7 @@ class VentilatorNet(nn.Module):
                         nn.BatchNorm1d(input_dim),
                         nn.Linear(input_dim, dense_dim // 2),
                         load_obj(activation)(),
-                        nn.LayerNorm(dense_dim),
+                        nn.LayerNorm(dense_dim // 2),
                         nn.Linear(dense_dim // 2, dense_dim),
                         load_obj(activation)(),
                         nn.Dropout(dropout),
@@ -81,7 +81,7 @@ class VentilatorNet(nn.Module):
                     self.mlp = nn.Sequential(
                         nn.Linear(input_dim, dense_dim // 2),
                         load_obj(activation)(),
-                        nn.LayerNorm(dense_dim),
+                        nn.LayerNorm(dense_dim // 2),
                         nn.Linear(dense_dim // 2, dense_dim),
                         load_obj(activation)(),
                         nn.LayerNorm(dense_dim),
