@@ -93,7 +93,7 @@ class Dataset(torch.utils.data.Dataset):
 
 n = 100*1024 if debug else None
 
-di = '/kaggle/input/ventilator-pressure-prediction/'
+di = '/workspace/data/ventilator_pressure_prediction/'
 train = pd.read_csv(di + 'train.csv', nrows=n)
 test = pd.read_csv(di + 'test.csv', nrows=n)
 submit = pd.read_csv(di + 'sample_submission.csv', nrows=n)
