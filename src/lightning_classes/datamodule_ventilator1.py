@@ -96,7 +96,8 @@ class ImagenetteDataModule(pl.LightningDataModule):
             batch_size=self.cfg.datamodule.batch_size,
             num_workers=self.cfg.datamodule.num_workers,
             pin_memory=self.cfg.datamodule.pin_memory,
-            shuffle=True
+            shuffle=True,
+            drop_last=True
         )
         return train_loader
 
@@ -107,6 +108,7 @@ class ImagenetteDataModule(pl.LightningDataModule):
             num_workers=self.cfg.datamodule.num_workers,
             pin_memory=self.cfg.datamodule.pin_memory,
             shuffle=False,
+            drop_last=True
         )
 
         return valid_loader

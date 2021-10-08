@@ -1,7 +1,9 @@
 lr: 0.001
-metric: ${metric.metric.metric_name}
+#metric: ${metric.metric.metric_name}
+metric: ${metric.metric.metric_name}_epoch
+#metric: 'ds'
 mode: "min"
-seed: 42
+seed: 2021
 debug: False
 n_classes: 1
 lightning_module_name: src.lightning_classes.lightning_ventilator.VentilatorRegression

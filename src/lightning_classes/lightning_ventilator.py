@@ -18,7 +18,9 @@ class VentilatorRegression(pl.LightningModule):
         )
         if 'other_metrics' in self.cfg.metric.keys():
             for metric in self.cfg.metric.other_metrics:
-                self.metrics.update({metric.metric_name: load_obj(metric.class_name)(**metric.params)})
+                self.metrics.update({metric.metric_name: load_obj(metric.class_name)()})
+
+        print(f'{self.metrics=}')
 
     def forward(self, x, *args, **kwargs):
         return self.model(x)
@@ -46,6 +48,7 @@ class VentilatorRegression(pl.LightningModule):
         # pred = self(data).squeeze(-1)
         pred = self(batch).squeeze(-1)
         # print('pred', pred)
+        # print('train_batch', batch['input'].shape)
         if self.cfg.loss.class_name == 'torch.nn.L1Loss':
             loss = self.loss(pred, batch['p']).mean()
         else:
@@ -53,7 +56,10 @@ class VentilatorRegression(pl.LightningModule):
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         for metric in self.metrics:
-            score = self.metrics[metric](pred, batch['p'], batch['u_out']).mean()
+            if metric == 'mae':
+                score = self.metrics[metric](pred, batch['p']).mean()
+            else:
+                score = self.metrics[metric](pred, batch['p'], batch['u_out']).mean()
             self.log(f'train_{metric}', score, on_step=True, on_epoch=True, prog_bar=False, logger=True)
         return loss
 
@@ -61,6 +67,7 @@ class VentilatorRegression(pl.LightningModule):
         # data = batch['input']
         # pred = self(data).squeeze(-1)
         pred = self(batch).squeeze(-1)
+        # print('valid_batch', batch['input'].shape)
         if self.cfg.loss.class_name == 'torch.nn.L1Loss':
             loss = self.loss(pred, batch['p']).mean()
         else:
@@ -68,7 +75,10 @@ class VentilatorRegression(pl.LightningModule):
         self.log('valid_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         for metric in self.metrics:
-            score = self.metrics[metric](pred, batch['p'], batch['u_out']).mean()
+            if metric == 'mae':
+                score = self.metrics[metric](pred, batch['p']).mean()
+            else:
+                score = self.metrics[metric](pred, batch['p'], batch['u_out']).mean()
             self.log(f'valid_{metric}', score, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
