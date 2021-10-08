@@ -68,3 +68,6 @@ activation2=torch.nn.PReLU
 model.params.dense_dim=512
 model.params.lstm_dim=1024
 model.params.num_layers=2
+
+
+datamodule.data_module_name=src.lightning_classes.datamodule_ventilator1.ImagenetteDataModule datamodule.class_name=src.datasets.ventilator_dataset2.VentilatorDataset
