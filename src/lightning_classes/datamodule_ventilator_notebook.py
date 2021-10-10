@@ -102,6 +102,9 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         y_all = train.pressure.values.reshape(-1, 80)
 
+        w_all = 1 - train.u_out.values.reshape(-1, 80)  # weights for the score, but not used in this notebook
+
+        w_test = 1 - test.u_out.values.reshape(-1, 80)
 
         if self.cfg.datamodule.make_features_style == 1:
             train = self.make_features(train)
@@ -111,9 +114,6 @@ class VentilatorDataModule(pl.LightningDataModule):
             test = self.make_features1(test)
 
 
-        w_all = 1 - train.u_out.values.reshape(-1, 80)  # weights for the score, but not used in this notebook
-
-        w_test = 1 - test.u_out.values.reshape(-1, 80)
 
 
         RS = RobustScaler()

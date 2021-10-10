@@ -2,10 +2,10 @@ from torch import nn
 
 
 class VentilatorNet(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_dim):
         hidden = [400, 300, 200, 100]
         super().__init__()
-        self.lstm1 = nn.LSTM(input_size, hidden[0],
+        self.lstm1 = nn.LSTM(input_dim, hidden[0],
                              batch_first=True, bidirectional=True)
         self.lstm2 = nn.LSTM(2 * hidden[0], hidden[1],
                              batch_first=True, bidirectional=True)

@@ -108,4 +108,4 @@ python train.py datamodule.num_workers=0 datamodule.batch_size=256 callbacks.ear
 ```
 ------
 
-python train.py datamodule.num_workers=0 datamodule.batch_size=32 callbacks.early_stopping.params.patience=50 general.log_code=False datamodule.fold_n=0 datamodule=ventilator_datamodule_notebook model=ventilator_model_notebook model.params.input_dim=27 trainer.gpus=1 trainer.max_epochs=3 general.predict=False loss=mae metric=metric_manager training.debug=True optimizer=Adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 trainer.gradient_clip_val=1000
+python train.py datamodule.num_workers=0 datamodule.batch_size=32 callbacks.early_stopping.params.patience=50 general.log_code=False datamodule.fold_n=0 datamodule=ventilator_datamodule_notebook model=ventilator_model_notebook model.params.input_dim=50 trainer.gpus=1 trainer.max_epochs=3 general.predict=False loss=mae metric=metric_manager training.debug=True optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 trainer.gradient_clip_val=1000
