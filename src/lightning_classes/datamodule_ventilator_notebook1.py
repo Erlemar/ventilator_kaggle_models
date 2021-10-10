@@ -93,6 +93,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         return data
 
     def make_features2(self, data):
+        print('new_feats!!!! 2 ')
         data['area'] = data['time_step'] * data['u_in']
         data['area'] = data.groupby('breath_id')['area'].cumsum()
 
@@ -151,8 +152,6 @@ class VentilatorDataModule(pl.LightningDataModule):
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
             test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
 
-        y_all = train.pressure.values.reshape(-1, 80)
-
         w_all = 1 - train.u_out.values.reshape(-1, 80)  # weights for the score, but not used in this notebook
 
         w_test = 1 - test.u_out.values.reshape(-1, 80)
@@ -163,30 +162,23 @@ class VentilatorDataModule(pl.LightningDataModule):
         elif self.cfg.datamodule.make_features_style == 2:
             train = self.make_features1(train)
             test = self.make_features1(test)
+        elif self.cfg.datamodule.make_features_style == 3:
+            train = self.make_features2(train)
+            test = self.make_features2(test)
 
-
-
+        targets = train[['pressure']].to_numpy().reshape(-1, 80)
+        train.drop(['pressure', 'id', 'breath_id'], axis=1, inplace=True)
+        test = test.drop(['id', 'breath_id'], axis=1)
 
         RS = RobustScaler()
         train = RS.fit_transform(train)
         test = RS.transform(test)
 
-        X_all = train.reshape(-1, 80, train.shape[-1])
-        input_size = X_all.shape[2]
-        X_test = test.reshape(-1, 80, test.shape[-1])
+
         y_test = np.zeros(len(test)).reshape(-1, 80)
-
-        # targets = train[['pressure']].to_numpy().reshape(-1, 80)
-        # test_targets = test[['pressure']].to_numpy().reshape(-1, 80)
-        # train.drop(['pressure', 'id', 'breath_id'], axis=1, inplace=True)
-        # test = test.drop(['id', 'breath_id', 'pressure'], axis=1)
-        #
-        # train_u_out = train[['u_out']].to_numpy().reshape(-1, 80)
-        # test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
-
-
-        # train = train.reshape(-1, 80, train.shape[-1])
-        # test = test.reshape(-1, 80, train.shape[-1])
+        train = train.reshape(-1, 80, train.shape[-1])
+        print('train!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', train.shape)
+        test = test.reshape(-1, 80, train.shape[-1])
         gkf = KFold(n_splits=self.cfg.datamodule.n_folds, shuffle=True, random_state=self.cfg.training.seed)
         # if self.cfg.datamodule.split == 'GroupKFold':
         #     gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)
@@ -195,14 +187,14 @@ class VentilatorDataModule(pl.LightningDataModule):
         # print('X', X_all.shape)
         # print('X', X_all.shape)
 
-        splits = list(gkf.split(X=X_all, y=y_all))
+        splits = list(gkf.split(X=train, y=targets))
         idx_train, idx_val = splits[self.cfg.datamodule.fold_n]
 
-        X_train = X_all[idx_train]
-        y_train = y_all[idx_train]
+        X_train = train[idx_train]
+        y_train = targets[idx_train]
         w_train = w_all[idx_train]
-        X_val = X_all[idx_val]
-        y_val = y_all[idx_val]
+        X_val = train[idx_val]
+        y_val = targets[idx_val]
         w_val = w_all[idx_val]
 
         del train

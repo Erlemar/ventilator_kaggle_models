@@ -109,3 +109,9 @@ python train.py datamodule.num_workers=0 datamodule.batch_size=256 callbacks.ear
 ------
 
 python train.py datamodule.num_workers=0 datamodule.batch_size=32 callbacks.early_stopping.params.patience=50 general.log_code=False datamodule.fold_n=0 datamodule=ventilator_datamodule_notebook model=ventilator_model_notebook model.params.input_dim=50 trainer.gpus=1 trainer.max_epochs=3 general.predict=False loss=mae metric=metric_manager training.debug=True optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 trainer.gradient_clip_val=1000
+
+
+--------
+datamodule=ventilator_datamodule_notebook datamodule.data_module_name=src.lightning_classes.datamodule_ventilator_notebook1.VentilatorDataModule datamodule.make_features_style=3 
+
+model=ventilator_model_notebook model.class_name=src.models.ventilator_model_notebook1.VentilatorNet model.params.input_dim=50
