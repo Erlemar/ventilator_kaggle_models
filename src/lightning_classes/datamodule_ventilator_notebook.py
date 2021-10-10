@@ -100,6 +100,9 @@ class VentilatorDataModule(pl.LightningDataModule):
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
             test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
 
+        y_all = train.pressure.values.reshape(-1, 80)
+
+
         if self.cfg.datamodule.make_features_style == 1:
             train = self.make_features(train)
             test = self.make_features(test)
@@ -107,7 +110,7 @@ class VentilatorDataModule(pl.LightningDataModule):
             train = self.make_features1(train)
             test = self.make_features1(test)
 
-        y_all = train.pressure.values.reshape(-1, 80)
+
         w_all = 1 - train.u_out.values.reshape(-1, 80)  # weights for the score, but not used in this notebook
 
         w_test = 1 - test.u_out.values.reshape(-1, 80)
