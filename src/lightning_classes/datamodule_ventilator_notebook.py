@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 from omegaconf import DictConfig
@@ -99,41 +100,56 @@ class VentilatorDataModule(pl.LightningDataModule):
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
             test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
 
-        train = self.make_features(train)
-        test = self.make_features(test)
+        if self.cfg.datamodule.make_features_style == 1:
+            train = self.make_features(train)
+            test = self.make_features(test)
+        elif self.cfg.datamodule.make_features_style == 2:
+            train = self.make_features1(train)
+            test = self.make_features1(test)
 
-        targets = train[['pressure']].to_numpy().reshape(-1, 80)
-        test_targets = test[['pressure']].to_numpy().reshape(-1, 80)
-        train.drop(['pressure', 'id', 'breath_id'], axis=1, inplace=True)
-        test = test.drop(['id', 'breath_id', 'pressure'], axis=1)
+        y_all = train.pressure.values.reshape(-1, 80)
+        w_all = 1 - train.u_out.values.reshape(-1, 80)  # weights for the score, but not used in this notebook
 
-        train_u_out = train[['u_out']].to_numpy().reshape(-1, 80)
-        test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
+        w_test = 1 - test.u_out.values.reshape(-1, 80)
 
 
         RS = RobustScaler()
         train = RS.fit_transform(train)
         test = RS.transform(test)
 
-        train = train.reshape(-1, 80, train.shape[-1])
-        test = test.reshape(-1, 80, train.shape[-1])
+        X_all = train.reshape(-1, 80, train.shape[-1])
+        input_size = X_all.shape[2]
+        X_test = test.reshape(-1, 80, test.shape[-1])
+        y_test = np.zeros(len(test)).reshape(-1, 80)
+
+        # targets = train[['pressure']].to_numpy().reshape(-1, 80)
+        # test_targets = test[['pressure']].to_numpy().reshape(-1, 80)
+        # train.drop(['pressure', 'id', 'breath_id'], axis=1, inplace=True)
+        # test = test.drop(['id', 'breath_id', 'pressure'], axis=1)
+        #
+        # train_u_out = train[['u_out']].to_numpy().reshape(-1, 80)
+        # test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
+
+
+        # train = train.reshape(-1, 80, train.shape[-1])
+        # test = test.reshape(-1, 80, train.shape[-1])
         gkf = KFold(n_splits=self.cfg.datamodule.n_folds, shuffle=True, random_state=self.cfg.training.seed)
         # if self.cfg.datamodule.split == 'GroupKFold':
         #     gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)
         # elif self.cfg.datamodule.split == 'GroupShuffleSplit':
         #     gkf = GroupShuffleSplit(n_splits=self.cfg.datamodule.n_folds, random_state=self.cfg.training.seed)
+        # print('X', X_all.shape)
+        # print('X', X_all.shape)
 
-        splits = list(gkf.split(X=train, y=train))
-        train_idx, valid_idx = splits[self.cfg.datamodule.fold_n]
+        splits = list(gkf.split(X=X_all, y=y_all))
+        idx_train, idx_val = splits[self.cfg.datamodule.fold_n]
 
-        train_df = train[train_idx].copy()
-        valid_df = train[valid_idx].copy()
-
-        train_u_out_ = train_u_out[train_idx].copy()
-        valid_u_out_ = train_u_out[valid_idx].copy()
-
-        train_targets = targets[train_idx].copy()
-        valid_targets = targets[valid_idx].copy()
+        X_train = X_all[idx_train]
+        y_train = y_all[idx_train]
+        w_train = w_all[idx_train]
+        X_val = X_all[idx_val]
+        y_val = y_all[idx_val]
+        w_val = w_all[idx_val]
 
         del train
         gc.collect()
@@ -141,17 +157,16 @@ class VentilatorDataModule(pl.LightningDataModule):
         # train dataset
         dataset_class = load_obj(self.cfg.datamodule.class_name)
 
-        print('TRAIN SHAPE', train_df.shape)
-        self.train_dataset = dataset_class(train_df, mode='train', normalize=self.cfg.datamodule.normalize, u_out=train_u_out_, pressure=train_targets)
-        self.valid_dataset = dataset_class(valid_df, mode='valid', normalize=self.cfg.datamodule.normalize, u_out=valid_u_out_, pressure=valid_targets)
-        self.test_dataset = dataset_class(test, mode='test', normalize=self.cfg.datamodule.normalize, u_out=test_u_out, pressure=test_targets)
+        self.train_dataset = dataset_class(X_train, mode='train', normalize=self.cfg.datamodule.normalize, u_out=w_train, pressure=y_train)
+        self.valid_dataset = dataset_class(X_val, mode='valid', normalize=self.cfg.datamodule.normalize, u_out=w_val, pressure=y_val)
+        self.test_dataset = dataset_class(test, mode='test', normalize=self.cfg.datamodule.normalize, u_out=w_test, pressure=y_test)
 
     def train_dataloader(self):
         train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.cfg.datamodule.batch_size,
             num_workers=self.cfg.datamodule.num_workers,
-            pin_memory=self.cfg.datamodule.pin_memory,
+            # pin_memory=self.cfg.datamodule.pin_memory,
             shuffle=True,
             drop_last=True
         )
@@ -162,9 +177,9 @@ class VentilatorDataModule(pl.LightningDataModule):
             self.valid_dataset,
             batch_size=self.cfg.datamodule.batch_size,
             num_workers=self.cfg.datamodule.num_workers,
-            pin_memory=self.cfg.datamodule.pin_memory,
+            # pin_memory=self.cfg.datamodule.pin_memory,
             shuffle=False,
-            drop_last=True
+            drop_last=False
         )
 
         return valid_loader
@@ -174,9 +189,8 @@ class VentilatorDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.cfg.datamodule.batch_size,
             num_workers=self.cfg.datamodule.num_workers,
-            pin_memory=self.cfg.datamodule.pin_memory,
+            # pin_memory=self.cfg.datamodule.pin_memory,
             shuffle=False,
-            drop_last=False
         )
 
         return test_loader

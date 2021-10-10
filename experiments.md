@@ -106,3 +106,6 @@ ventilator_kaggle_models/train.py datamodule.path=/workspace/data/ventilator_pre
 python train.py datamodule.num_workers=0 datamodule.batch_size=256 callbacks.early_stopping.params.patience=50 general.log_code=False datamodule.fold_n=0 datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset8 model=ventilator_model_8 model.params.use_mlp=False model.params.nhead=5 model.params.input_dim=35 scheduler=step trainer.gpus=1 trainer.max_epochs=3 general.predict=False trainer.gradient_clip_val=0.5 optimizer=adabelief scheduler=cosinewarm loss=mae metric=metric_manager
 
 ```
+------
+
+python train.py datamodule.num_workers=0 datamodule.batch_size=32 callbacks.early_stopping.params.patience=50 general.log_code=False datamodule.fold_n=0 datamodule=ventilator_datamodule_notebook model=ventilator_model_notebook model.params.input_dim=27 trainer.gpus=1 trainer.max_epochs=3 general.predict=False loss=mae metric=metric_manager training.debug=True optimizer=Adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 trainer.gradient_clip_val=1000
