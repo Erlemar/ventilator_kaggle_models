@@ -10,7 +10,10 @@ class VentilatorRegression(pl.LightningModule):
         self.cfg = cfg
         self.model = load_obj(cfg.model.class_name)(**self.cfg.model.params)
         print(self.model)
-        self.loss = load_obj(cfg.loss.class_name)()
+        if 'params' in self.cfg.loss:
+            self.loss = load_obj(cfg.loss.class_name)(**self.cfg.loss.params)
+        else:
+            self.loss = load_obj(cfg.loss.class_name)()
         self.metrics = torch.nn.ModuleDict(
             {
                 self.cfg.metric.metric.metric_name: load_obj(self.cfg.metric.metric.class_name)()
@@ -49,7 +52,7 @@ class VentilatorRegression(pl.LightningModule):
         pred = self(batch).squeeze(-1)
         # print('pred', pred)
         # print('train_batch', batch['input'].shape)
-        if self.cfg.loss.class_name == 'torch.nn.L1Loss':
+        if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
             loss = self.loss(pred, batch['p']).mean()
         else:
             loss = self.loss(pred, batch['p'], batch['u_out']).mean()
@@ -68,7 +71,7 @@ class VentilatorRegression(pl.LightningModule):
         # pred = self(data).squeeze(-1)
         pred = self(batch).squeeze(-1)
         # print('valid_batch', batch['input'].shape)
-        if self.cfg.loss.class_name == 'torch.nn.L1Loss':
+        if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
             loss = self.loss(pred, batch['p']).mean()
         else:
             loss = self.loss(pred, batch['p'], batch['u_out']).mean()

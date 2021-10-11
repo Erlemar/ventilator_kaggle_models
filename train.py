@@ -78,7 +78,7 @@ def run(cfg: DictConfig) -> None:
 
     if cfg.general.predict:
         if cfg.training.debug:
-            sub = pd.read_csv(os.path.join(cfg.datamodule.path, 'sample_submission.csv'), nrows=800)
+            sub = pd.read_csv(os.path.join(cfg.datamodule.path, 'sample_submission.csv'), nrows=80000)
         else:
             sub = pd.read_csv(os.path.join(cfg.datamodule.path, 'sample_submission.csv'))
         prediction = trainer.predict(model, dm.test_dataloader())
