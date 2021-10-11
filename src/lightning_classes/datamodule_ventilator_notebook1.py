@@ -170,10 +170,10 @@ class VentilatorDataModule(pl.LightningDataModule):
         train.drop(['pressure', 'id', 'breath_id'], axis=1, inplace=True)
         test = test.drop(['id', 'breath_id'], axis=1)
 
-        RS = RobustScaler()
-        train = RS.fit_transform(train)
-        test = RS.transform(test)
-
+        if self.cfg.datamodule.normalize:
+            RS = RobustScaler()
+            train = RS.fit_transform(train)
+            test = RS.transform(test)
 
         y_test = np.zeros(len(test)).reshape(-1, 80)
         train = train.reshape(-1, 80, train.shape[-1])
