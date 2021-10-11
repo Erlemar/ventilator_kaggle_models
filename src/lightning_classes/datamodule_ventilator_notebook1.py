@@ -174,6 +174,9 @@ class VentilatorDataModule(pl.LightningDataModule):
             RS = RobustScaler()
             train = RS.fit_transform(train)
             test = RS.transform(test)
+        else:
+            train = train.values
+            test = test.values
 
         y_test = np.zeros(len(test)).reshape(-1, 80)
         train = train.reshape(-1, 80, train.shape[-1])
