@@ -90,7 +90,7 @@ def run(cfg: DictConfig) -> None:
     print(run_name)
 
 
-@hydra.main(config_path='conf', config_name='config')
+@hydra.main(config_path='conf', config_name='config_0')
 def run_model(cfg: DictConfig) -> None:
     os.makedirs('logs', exist_ok=True)
     print(OmegaConf.to_yaml(cfg))

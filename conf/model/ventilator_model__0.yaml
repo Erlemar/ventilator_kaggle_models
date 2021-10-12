@@ -1,0 +1,10 @@
+class_name: src.models.ventilator_model__0.VentilatorNet
+params:
+  input_dim: 5
+  lstm_dim: 1024
+  lstm_layers: 4
+  logit_dim: 50
+  num_layers: 1
+  n_classes: ${training.n_classes}
+  initialize: True
+  init_style: 1

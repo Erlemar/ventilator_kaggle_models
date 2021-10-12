@@ -1,0 +1,12 @@
+path: d:/DataScience/Python_projects/Current_projects/GBVPP/data
+split: GroupKFold
+n_folds: 5
+fold_n: 0
+class_name: src.datasets.ventilator_dataset2.VentilatorDataset
+data_module_name: src.lightning_classes.datamodule_ventilator_0.VentilatorDataModule
+num_workers: 0
+batch_size: 256
+pin_memory: True
+train_len: 6036000
+normalize: True
+make_features_style: 1

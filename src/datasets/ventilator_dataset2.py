@@ -1,11 +1,9 @@
 from typing import Dict
 
-import joblib
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import torch
-from sklearn.preprocessing import RobustScaler
 from torch.utils.data import Dataset
 
 
@@ -14,7 +12,6 @@ class VentilatorDataset(Dataset):
     def __init__(self,
                  data: pd.DataFrame,
                  mode: str = '',
-                 normalize: bool = False,
                  u_out: np.array = None,
                  pressure: np.array = None,
 
@@ -25,14 +22,13 @@ class VentilatorDataset(Dataset):
         Args:
             data: dataframe with image id and bboxes
             mode: train/val/test
-            img_path: path to images
-            transforms: albumentations
+
         """
         print(f'{mode=}')
         self.data = data
         del data
         self.u_outs = u_out
-        self.pressures=pressure
+        self.pressures = pressure
 
     def __getitem__(self, idx: int) -> Dict[str, npt.ArrayLike]:
         data = {

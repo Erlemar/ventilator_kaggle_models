@@ -115,3 +115,17 @@ python train.py datamodule.num_workers=0 datamodule.batch_size=32 callbacks.earl
 datamodule=ventilator_datamodule_notebook datamodule.data_module_name=src.lightning_classes.datamodule_ventilator_notebook1.VentilatorDataModule datamodule.make_features_style=3 
 
 model=ventilator_model_notebook model.class_name=src.models.ventilator_model_notebook1.VentilatorNet model.params.input_dim=50
+
+=======
+srun --mem=64gb --gres=gpu:1 --nodes=1 --container-image=artgor/cv_nvidia:latest --no-container-entrypoint --container-mount-home --container-mounts=/home/mtsml_006:/workspace python ventilator_kaggle_models/train.py \
+callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb \
+model=ventilator_model_notebook model.class_name=src.models.ventilator_model_notebook1.VentilatorNet model.params.input_dim=50 \
+trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 \
+loss=mae metric=metric_manager \
+optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 \
+datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_notebook datamodule.data_module_name=src.lightning_classes.datamodule_ventilator_notebook1.VentilatorDataModule datamodule.make_features_style=3 datamodule.normalize=False datamodule.fold_n=0
+
+======
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model_notebook model.class_name=src.models.ventilator_model_notebook1.VentilatorNet model.params.input_dim=50 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=mae metric=metric_manager optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_notebook datamodule.data_module_name=src.lightning_classes.datamodule_ventilator_notebook1.VentilatorDataModule datamodule.make_features_style=3 datamodule.normalize=False datamodule.fold_n=0
+--
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=50 model.params.init_style=10 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=mae metric=metric_manager optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0
