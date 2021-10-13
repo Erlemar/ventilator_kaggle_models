@@ -1,18 +1,26 @@
 import torch
 from torch import nn
 
+from src.utils.technical_utils import load_obj
+
 
 class VentilatorNet(nn.Module):
     def __init__(self,
                  input_dim: int = 4,
+                 dense_dim: int = 128,
                  nhead: int = 8,
                  logit_dim: int = 256,
                  transformer_num_layers: int = 6,
+                 transformer_dropout: float = 0.1,
+                 transformer_activation: str = 'relu',
+                 activation: str = 'torch.nn.ReLU',
                  n_classes: int = 1,
                  initialize: bool = True,
                  use_transformer_encoder: bool = True,
                  use_transformer: bool = True,
                  init_style: int = 3,
+                 dim_feedforward: int = 3,
+                 use_mlp: bool = True,
                  ) -> None:
         """
         Model class.
@@ -21,15 +29,35 @@ class VentilatorNet(nn.Module):
             cfg: main config
         """
         super().__init__()
+        self.use_mlp = use_mlp
+        if self.use_mlp:
+
+            self.mlp = nn.Sequential(
+                nn.Linear(input_dim, dense_dim // 2),
+                load_obj(activation)(),
+                nn.Linear(dense_dim // 2, dense_dim),
+                load_obj(activation)(),
+            )
+            input_dim = dense_dim
+
         self.use_transformer_encoder = use_transformer_encoder
         if use_transformer_encoder:
-            self.encoder_layer = nn.TransformerEncoderLayer(d_model=input_dim, nhead=nhead)
+            self.encoder_layer = nn.TransformerEncoderLayer(d_model=input_dim, nhead=nhead,
+                                                            dim_feedforward=dim_feedforward,
+                                                            dropout=transformer_dropout,
+                                                            activation=transformer_activation,
+                                                            batch_first=True)
             self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=transformer_num_layers)
 
         self.use_transformer = use_transformer
         if self.use_transformer:
             self.transformer_model = nn.Transformer(d_model=input_dim, nhead=nhead,
-                                                    num_encoder_layers=transformer_num_layers)
+                                                    num_encoder_layers=transformer_num_layers,
+                                                    num_decoder_layers=transformer_num_layers,
+                                                    dim_feedforward=dim_feedforward,
+                                                    dropout=transformer_dropout,
+                                                    activation=transformer_activation,
+                                                    batch_first=True)
         linear_dim = input_dim
         if self.use_transformer_encoder and self.use_transformer:
             linear_dim *= 2
@@ -221,13 +249,19 @@ class VentilatorNet(nn.Module):
                         nn.init.orthogonal_(m.weight_hh_l0_reverse)
 
     def forward(self, x):
+        if self.use_mlp:
+            features = self.mlp(x['input'])
+        else:
+            features = x['input']
+
+
         if self.use_transformer_encoder and not self.use_transformer:
-            features = self.transformer_encoder(x['input'])
+            features = self.transformer_encoder(features)
         elif not self.use_transformer_encoder and self.use_transformer:
-            features = self.transformer_model(x['input'], x['input'])
+            features = self.transformer_model(features, features)
         elif self.use_transformer_encoder and self.use_transformer:
-            features = torch.cat((self.transformer_encoder(x['input']),
-                                  self.transformer_model(x['input'], x['input'])),
+            features = torch.cat((self.transformer_encoder(features),
+                                  self.transformer_model(features, features)),
                                  2)
 
         features = self.linear1(features)

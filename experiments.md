@@ -145,3 +145,4 @@ init style: 3, 5, 6
 try without normalizing data
 try without initializing
 
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=50 model.params.init_style=6 model.params.nhead=8 model.params.transformer_num_layers=4 model.params.use_transformer_encoder=True model.params.use_mlp=True trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0

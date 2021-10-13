@@ -4,8 +4,13 @@ params:
   nhead: 8
   transformer_num_layers: 6
   logit_dim: 50
+  dense_dim: 128
   n_classes: ${training.n_classes}
   initialize: True
   init_style: 3
+  dim_feedforward: 2048
+  transformer_dropout: 0.1
+  transformer_activation: 'relu' # try gelu
   use_transformer: False
   use_transformer_encoder: False
+  use_mlp: False
