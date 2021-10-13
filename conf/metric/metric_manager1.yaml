@@ -1,0 +1,8 @@
+
+metric:
+  class_name: src.metrics.ventilator_mae.VentilatorMAE
+  metric_name: ventilator_mae
+
+other_metrics:
+  - class_name: torch.nn.L1Loss
+    metric_name: mae
