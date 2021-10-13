@@ -1,0 +1,11 @@
+class_name: src.models.ventilator_model__1.VentilatorNet
+params:
+  input_dim: 5
+  nhead: 8
+  transformer_num_layers: 6
+  logit_dim: 50
+  n_classes: ${training.n_classes}
+  initialize: True
+  init_style: 3
+  use_transformer: False
+  use_transformer_encoder: False

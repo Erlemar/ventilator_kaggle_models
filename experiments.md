@@ -128,6 +128,20 @@ datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/d
 ======
 python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model_notebook model.class_name=src.models.ventilator_model_notebook1.VentilatorNet model.params.input_dim=50 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=mae metric=metric_manager optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_notebook datamodule.data_module_name=src.lightning_classes.datamodule_ventilator_notebook1.VentilatorDataModule datamodule.make_features_style=3 datamodule.normalize=False datamodule.fold_n=0
 --
-python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=50 model.params.init_style=10 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=mae metric=metric_manager optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=50 model.params.init_style=3 model.params.lstm_layers=6 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0
 
-BatchNorm1d(80) after LSTM/GRU
+--
+1
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=50 model.params.init_style=3 model.params.nhead=25 model.params.transformer_num_layers=1 model.params.use_transformer_encoder=True trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0
+
+2
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=50 model.params.init_style=3 model.params.nhead=25 model.params.transformer_num_layers=1 model.params.use_transformer=True trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0
+
+3
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=50 model.params.init_style=3 model.params.nhead=25 model.params.transformer_num_layers=1 model.params.use_transformer=True model.params.use_transformer_encoder=True trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0
+
+
+init style: 3, 5, 6
+try without normalizing data
+try without initializing
+
