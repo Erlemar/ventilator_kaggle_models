@@ -92,6 +92,80 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         return data
 
+    def make_features2(self, data):
+        data['area'] = data['time_step'] * data['u_in']
+        data['area'] = data.groupby('breath_id')['area'].cumsum()
+
+        data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
+
+        data['u_in_lag1'] = data.groupby('breath_id')['u_in'].shift(1)
+        data['u_out_lag1'] = data.groupby('breath_id')['u_out'].shift(1)
+        data['u_in_lag_back1'] = data.groupby('breath_id')['u_in'].shift(-1)
+        data['u_out_lag_back1'] = data.groupby('breath_id')['u_out'].shift(-1)
+        data['u_in_lag2'] = data.groupby('breath_id')['u_in'].shift(2)
+        data['u_out_lag2'] = data.groupby('breath_id')['u_out'].shift(2)
+        data['u_in_lag_back2'] = data.groupby('breath_id')['u_in'].shift(-2)
+        data['u_out_lag_back2'] = data.groupby('breath_id')['u_out'].shift(-2)
+        data['u_in_lag3'] = data.groupby('breath_id')['u_in'].shift(3)
+        data['u_out_lag3'] = data.groupby('breath_id')['u_out'].shift(3)
+        data['u_in_lag_back3'] = data.groupby('breath_id')['u_in'].shift(-3)
+        data['u_out_lag_back3'] = data.groupby('breath_id')['u_out'].shift(-3)
+        data['u_in_lag4'] = data.groupby('breath_id')['u_in'].shift(4)
+        data['u_out_lag4'] = data.groupby('breath_id')['u_out'].shift(4)
+        data['u_in_lag_back4'] = data.groupby('breath_id')['u_in'].shift(-4)
+        data['u_out_lag_back4'] = data.groupby('breath_id')['u_out'].shift(-4)
+        data = data.fillna(0)
+
+        data['breath_id__u_in__max'] = data.groupby(['breath_id'])['u_in'].transform('max')
+        data['breath_id__u_out__max'] = data.groupby(['breath_id'])['u_out'].transform('max')
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+        data['u_in_diff3'] = data['u_in'] - data['u_in_lag3']
+        data['u_out_diff3'] = data['u_out'] - data['u_out_lag3']
+        data['u_in_diff4'] = data['u_in'] - data['u_in_lag4']
+        data['u_out_diff4'] = data['u_out'] - data['u_out_lag4']
+        data['cross'] = data['u_in'] * data['u_out']
+        data['cross2'] = data['time_step'] * data['u_out']
+
+        data['one'] = 1
+        data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
+        data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
+
+        data['breath_id_lag'] = data['breath_id'].shift(1).fillna(0)
+        data['breath_id_lag2'] = data['breath_id'].shift(2).fillna(0)
+        data['breath_id_lagsame'] = np.select([data['breath_id_lag'] == data['breath_id']], [1], 0)
+        data['breath_id_lag2same'] = np.select([data['breath_id_lag2'] == data['breath_id']], [1], 0)
+        data['breath_id__u_in_lag'] = data['u_in'].shift(1).fillna(0)
+        data['breath_id__u_in_lag'] = data['breath_id__u_in_lag'] * data['breath_id_lagsame']
+        data['breath_id__u_in_lag2'] = data['u_in'].shift(2).fillna(0)
+        data['breath_id__u_in_lag2'] = data['breath_id__u_in_lag2'] * data['breath_id_lag2same']
+
+        data['R'] = data['R'].astype(str)
+        data['C'] = data['C'].astype(str)
+        data['R__C'] = data["R"].astype(str) + '__' + data["C"].astype(str)
+        data = pd.get_dummies(data)
+        data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+                   'breath_id_lag2same'], axis=1, inplace=True)
+
+        if 'pressure' in data.columns:
+            data.drop('pressure', axis=1, inplace=True)
+
+        return data
+
     def setup(self, stage=None):
         if self.cfg.training.debug:
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=196000)
@@ -110,6 +184,9 @@ class VentilatorDataModule(pl.LightningDataModule):
         elif self.cfg.datamodule.make_features_style == 1:
             train = self.make_features1(train)
             test = self.make_features1(test)
+        elif self.cfg.datamodule.make_features_style == 2:
+            train = self.make_features2(train)
+            test = self.make_features2(test)
 
         train_u_out = train[['u_out']].to_numpy().reshape(-1, 80)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
