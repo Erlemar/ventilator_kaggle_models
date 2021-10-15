@@ -88,3 +88,14 @@ class VentilatorRegression(pl.LightningModule):
     def predict_step(self, batch, *args, **kwargs):  # type: ignore
         # data = batch['input']
         return self(batch).squeeze(-1)
+
+    # def training_epoch_end(self, outputs):
+    #     avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+    #     y_true = torch.cat([x['target'] for x in outputs])
+    #     y_pred = torch.cat([x['logits'] for x in outputs])
+    #     score = self.metric(y_pred.argmax(1), y_true)
+    #
+    #     # score = torch.tensor(1.0, device=self.device)
+    #
+    #     logs = {'train_loss': avg_loss, f'train_{self.cfg.training.metric}': score}
+    #     return {'log': logs, 'progress_bar': logs}
