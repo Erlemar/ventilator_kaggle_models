@@ -540,6 +540,309 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         return data.fillna(0)
 
+    def make_features5(self, data):
+        data['area'] = data['time_step'] * data['u_in']
+        data['area'] = data.groupby('breath_id')['area'].cumsum()
+
+        data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
+
+        data['u_in_lag1'] = data.groupby('breath_id')['u_in'].shift(1)
+        data['u_out_lag1'] = data.groupby('breath_id')['u_out'].shift(1)
+        data['u_in_lag_back1'] = data.groupby('breath_id')['u_in'].shift(-1)
+        data['u_out_lag_back1'] = data.groupby('breath_id')['u_out'].shift(-1)
+        data['u_in_lag2'] = data.groupby('breath_id')['u_in'].shift(2)
+        data['u_out_lag2'] = data.groupby('breath_id')['u_out'].shift(2)
+        data['u_in_lag_back2'] = data.groupby('breath_id')['u_in'].shift(-2)
+        data['u_out_lag_back2'] = data.groupby('breath_id')['u_out'].shift(-2)
+        data['u_in_lag3'] = data.groupby('breath_id')['u_in'].shift(3)
+        data['u_out_lag3'] = data.groupby('breath_id')['u_out'].shift(3)
+        data['u_in_lag_back3'] = data.groupby('breath_id')['u_in'].shift(-3)
+        data['u_out_lag_back3'] = data.groupby('breath_id')['u_out'].shift(-3)
+        data['u_in_lag4'] = data.groupby('breath_id')['u_in'].shift(4)
+        data['u_out_lag4'] = data.groupby('breath_id')['u_out'].shift(4)
+        data['u_in_lag_back4'] = data.groupby('breath_id')['u_in'].shift(-4)
+        data['u_out_lag_back4'] = data.groupby('breath_id')['u_out'].shift(-4)
+        data = data.fillna(0)
+
+        data['breath_id__u_in__max'] = data.groupby(['breath_id'])['u_in'].transform('max')
+        data['breath_id__u_out__max'] = data.groupby(['breath_id'])['u_out'].transform('max')
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+        data['u_in_diff3'] = data['u_in'] - data['u_in_lag3']
+        data['u_out_diff3'] = data['u_out'] - data['u_out_lag3']
+        data['u_in_diff4'] = data['u_in'] - data['u_in_lag4']
+        data['u_out_diff4'] = data['u_out'] - data['u_out_lag4']
+        data['cross'] = data['u_in'] * data['u_out']
+        data['cross2'] = data['time_step'] * data['u_out']
+
+        data['one'] = 1
+        data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
+        data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
+
+        data['breath_id_lag'] = data['breath_id'].shift(1).fillna(0)
+        data['breath_id_lag2'] = data['breath_id'].shift(2).fillna(0)
+        data['breath_id_lagsame'] = np.select([data['breath_id_lag'] == data['breath_id']], [1], 0)
+        data['breath_id_lag2same'] = np.select([data['breath_id_lag2'] == data['breath_id']], [1], 0)
+        data['breath_id__u_in_lag'] = data['u_in'].shift(1).fillna(0)
+        data['breath_id__u_in_lag'] = data['breath_id__u_in_lag'] * data['breath_id_lagsame']
+        data['breath_id__u_in_lag2'] = data['u_in'].shift(2).fillna(0)
+        data['breath_id__u_in_lag2'] = data['breath_id__u_in_lag2'] * data['breath_id_lag2same']
+
+        data['R_sum_c'] = (data['R'] + data['C']).astype(str)
+        data['R_mult_c'] = (data['R'] * data['C']).astype(str)
+        data['R'] = data['R'].astype(str)
+        data['C'] = data['C'].astype(str)
+        data['R__C'] = data["R"].astype(str) + '__' + data["C"].astype(str)
+        data = pd.get_dummies(data)
+
+        data[["15_in_sum", "15_in_min", "15_in_max", "15_in_mean"]] = (data \
+                                                                       .groupby('breath_id')['u_in'] \
+                                                                       .rolling(window=15, min_periods=1) \
+                                                                       .agg({"15_in_sum": "sum",
+                                                                             "15_in_min": "min",
+                                                                             "15_in_max": "max",
+                                                                             "15_in_mean": "mean"
+                                                                             # "15_in_std":"std"
+                                                                             }) \
+                                                                       .reset_index(level=0, drop=True))
+        data['u_in_lagback_diff1'] = data['u_in'] - data['u_in_lag_back1']
+        data['u_out_lagback_diff1'] = data['u_out'] - data['u_out_lag_back1']
+        data['u_in_lagback_diff2'] = data['u_in'] - data['u_in_lag_back2']
+        data['u_out_lagback_diff2'] = data['u_out'] - data['u_out_lag_back2']
+
+        data['ewm_u_in_mean'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).mean().reset_index(level=0,
+                                                                                                      drop=True)
+
+        data['ewm_u_in_std'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).std().reset_index(level=0, drop=True)
+        data['ewm_u_in_corr'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).corr().reset_index(level=0,
+                                                                                                      drop=True)
+
+        data['rolling_10_mean'] = data.groupby('breath_id')['u_in'].rolling(window=10,
+                                                                            min_periods=1).mean().reset_index(
+            level=0, drop=True)
+        data['rolling_10_max'] = data.groupby('breath_id')['u_in'].rolling(window=10, min_periods=1).max().reset_index(
+            level=0,
+            drop=True)
+        data['rolling_10_std'] = data.groupby('breath_id')['u_in'].rolling(window=10, min_periods=1).std().reset_index(
+            level=0,
+            drop=True)
+
+        data['expand_mean'] = data.groupby('breath_id')['u_in'].expanding(2).mean().reset_index(level=0, drop=True)
+        data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
+        data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
+
+        data["u_in_rolling_mean2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).mean()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_mean4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).mean()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_mean10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).mean()[
+            "u_in"].reset_index(drop=True)
+
+        data["u_in_rolling_max2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).max()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_max4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).max()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_max10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).max()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_min2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).min()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_min4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).min()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_min10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).min()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_std2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).std()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_std4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).std()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_std10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).std()[
+            "u_in"].reset_index(drop=True)
+
+        g = data.groupby('breath_id')['u_in']
+        data['ewm_u_in_mean'] = g.ewm(halflife=10).mean() \
+            .reset_index(level=0, drop=True)
+        data['ewm_u_in_std'] = g.ewm(halflife=10).std() \
+            .reset_index(level=0, drop=True)
+        data['ewm_u_in_corr'] = g.ewm(halflife=10).corr() \
+            .reset_index(level=0, drop=True)
+
+        data['rolling_10_mean'] = g.rolling(window=10, min_periods=1).mean() \
+            .reset_index(level=0, drop=True)
+        data['rolling_10_max'] = g.rolling(window=10, min_periods=1).max() \
+            .reset_index(level=0, drop=True)
+        data['rolling_10_std'] = g.rolling(window=10, min_periods=1).std() \
+            .reset_index(level=0, drop=True)
+
+        data['expand_mean'] = g.expanding(2).mean() \
+            .reset_index(level=0, drop=True)
+        data['expand_max'] = g.expanding(2).max() \
+            .reset_index(level=0, drop=True)
+        data['expand_std'] = g.expanding(2).std() \
+            .reset_index(level=0, drop=True)
+
+        data['u_in_lag_back10'] = data.groupby('breath_id')['u_in'].shift(-10)
+        data['u_out_lag_back10'] = data.groupby('breath_id')['u_out'].shift(-10)
+
+        data['time_step_diff'] = data.groupby('breath_id')['time_step'].diff().fillna(0)
+        ### rolling window ts feats
+        data['ewm_u_in_mean'] = data.groupby('breath_id')['u_in'].ewm(halflife=9).mean().reset_index(level=0,
+                                                                                                     drop=True)
+        data['ewm_u_in_std'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).std().reset_index(level=0,
+                                                                                                    drop=True)  ## could add covar?
+        data['ewm_u_in_corr'] = data.groupby('breath_id')['u_in'].ewm(halflife=15).corr().reset_index(level=0,
+                                                                                                      drop=True)  # self umin corr
+        # data['ewm_u_in_corr'] = data.groupby('breath_id')['u_in'].ewm(halflife=6).corr(data.groupby('breath_id')["u_out"]).reset_index(level=0,drop=True) # corr with u_out # error
+        ## rolling window of 15 periods
+        data[["15_in_sum", "15_in_min", "15_in_max", "15_in_mean", "15_out_std"]] = data.groupby('breath_id')[
+            'u_in'].rolling(window=15, min_periods=1).agg(
+            {"15_in_sum": "sum", "15_in_min": "min", "15_in_max": "max", "15_in_mean": "mean",
+             "15_in_std": "std"}).reset_index(level=0, drop=True)
+        #     data[["45_in_sum","45_in_min","45_in_max","45_in_mean","45_out_std"]] = data.groupby('breath_id')['u_in'].rolling(window=45,min_periods=1).agg({"45_in_sum":"sum","45_in_min":"min","45_in_max":"max","45_in_mean":"mean","45_in_std":"std"}).reset_index(level=0,drop=True)
+        data[["45_in_sum", "45_in_min", "45_in_max", "45_in_mean", "45_out_std"]] = data.groupby('breath_id')[
+            'u_in'].rolling(window=45, min_periods=1).agg(
+            {"45_in_sum": "sum", "45_in_min": "min", "45_in_max": "max", "45_in_mean": "mean",
+             "45_in_std": "std"}).reset_index(level=0, drop=True)
+
+        data[["15_out_mean"]] = data.groupby('breath_id')['u_out'].rolling(window=15, min_periods=1).agg(
+            {"15_out_mean": "mean"}).reset_index(level=0, drop=True)
+
+        data['time_delta'] = data['time_step'].diff()
+        data['time_delta'].fillna(0, inplace=True)
+        data['time_delta'].mask(data['time_delta'] < 0, 0, inplace=True)
+        data['tmp'] = data['time_delta'] * data['u_in']
+        data['area_true'] = data.groupby('breath_id')['tmp'].cumsum()
+
+        # u_in_max_dict = data.groupby('breath_id')['u_in'].max().to_dict()
+        # data['u_in_max'] = data['breath_id'].map(u_in_max_dict)
+        # u_in_min_dict = data.groupby('breath_id')['u_in'].min().to_dict()
+        # data['u_in_min'] = data['breath_id'].map(u_in_min_dict)
+        u_in_mean_dict = data.groupby('breath_id')['u_in'].mean().to_dict()
+        data['u_in_mean'] = data['breath_id'].map(u_in_mean_dict)
+        del u_in_mean_dict
+        u_in_std_dict = data.groupby('breath_id')['u_in'].std().to_dict()
+        data['u_in_std'] = data['breath_id'].map(u_in_std_dict)
+        del u_in_std_dict
+
+        # u_in_half is time:0 - time point of u_out:1 rise (almost 1.0s)
+        data['tmp'] = data['u_out'] * (-1) + 1  # inversion of u_out
+        data['u_in_half'] = data['tmp'] * data['u_in']
+
+        # u_in_half: max, min, mean, std
+        u_in_half_max_dict = data.groupby('breath_id')['u_in_half'].max().to_dict()
+        data['u_in_half_max'] = data['breath_id'].map(u_in_half_max_dict)
+        del u_in_half_max_dict
+        u_in_half_min_dict = data.groupby('breath_id')['u_in_half'].min().to_dict()
+        data['u_in_half_min'] = data['breath_id'].map(u_in_half_min_dict)
+        del u_in_half_min_dict
+        u_in_half_mean_dict = data.groupby('breath_id')['u_in_half'].mean().to_dict()
+        data['u_in_half_mean'] = data['breath_id'].map(u_in_half_mean_dict)
+        del u_in_half_mean_dict
+        u_in_half_std_dict = data.groupby('breath_id')['u_in_half'].std().to_dict()
+        data['u_in_half_std'] = data['breath_id'].map(u_in_half_std_dict)
+        del u_in_half_std_dict
+
+        gc.collect()
+
+        # All entries are first point of each breath_id
+        first_data = data.loc[0::80, :]
+        # All entries are first point of each breath_id
+        last_data = data.loc[79::80, :]
+
+        # The Main mode DataFrame and flag
+        main_data = last_data[(last_data['u_in'] > 4.8) & (last_data['u_in'] < 5.1)]
+        main_mode_dict = dict(zip(main_data['breath_id'], [1] * len(main_data)))
+        data['main_mode'] = data['breath_id'].map(main_mode_dict)
+        data['main_mode'].fillna(0, inplace=True)
+        del main_data
+        del main_mode_dict
+
+        # u_in: first point, last point
+        u_in_first_dict = dict(zip(first_data['breath_id'], first_data['u_in']))
+        data['u_in_first'] = data['breath_id'].map(u_in_first_dict)
+        del u_in_first_dict
+        u_in_last_dict = dict(zip(first_data['breath_id'], last_data['u_in']))
+        data['u_in_last'] = data['breath_id'].map(u_in_last_dict)
+        del u_in_last_dict
+        # time(sec) of end point
+        time_end_dict = dict(zip(last_data['breath_id'], last_data['time_step']))
+        data['time_end'] = data['breath_id'].map(time_end_dict)
+        del time_end_dict
+        del last_data
+
+        # u_out1_timing flag and DataFrame: speed up
+        # 高速版 uout1_data 作成
+        data['u_out_diff'] = data['u_out'].diff()
+        data['u_out_diff'].fillna(0, inplace=True)
+        data['u_out_diff'].replace(-1, 0, inplace=True)
+        uout1_data = data[data['u_out_diff'] == 1]
+
+        gc.collect()
+
+        # main_uout1 = uout1_data[uout1_data['main_mode']==1]
+        # nomain_uout1 = uout1_data[uout1_data['main_mode']==1]
+
+        # Register Area when u_out becomes 1
+        uout1_area_dict = dict(zip(first_data['breath_id'], first_data['u_in']))
+        data['area_uout1'] = data['breath_id'].map(uout1_area_dict)
+        del uout1_area_dict
+
+        # time(sec) when u_out becomes 1
+        uout1_dict = dict(zip(uout1_data['breath_id'], uout1_data['time_step']))
+        data['time_uout1'] = data['breath_id'].map(uout1_dict)
+        del uout1_dict
+
+        # u_in when u_out becomes1
+        u_in_uout1_dict = dict(zip(uout1_data['breath_id'], uout1_data['u_in']))
+        data['u_in_uout1'] = data['breath_id'].map(u_in_uout1_dict)
+        del u_in_uout1_dict
+
+        # Dict that puts 0 at the beginning of the 80row cycle
+        first_0_dict = dict(zip(first_data['id'], [0] * len(uout1_data)))
+
+        del first_data
+        del uout1_data
+
+        gc.collect()
+
+        # Faster version u_in_diff creation, faster than groupby
+        data['u_in_diff'] = data['u_in'].diff()
+        data['tmp'] = data['id'].map(first_0_dict)  # put 0, the 80row cycle
+        data.iloc[0::80, data.columns.get_loc('u_in_diff')] = data.iloc[0::80, data.columns.get_loc('tmp')]
+
+        # Create u_in vibration
+        data['diff_sign'] = np.sign(data['u_in_diff'])
+        data['sign_diff'] = data['diff_sign'].diff()
+        data['tmp'] = data['id'].map(first_0_dict)  # put 0, the 80row cycle
+        data.iloc[0::80, data.columns.get_loc('sign_diff')] = data.iloc[0::80, data.columns.get_loc('tmp')]
+        del first_0_dict
+
+        # Count the number of inversions, so take the absolute value and sum
+        data['sign_diff'] = abs(data['sign_diff'])
+        sign_diff_dict = data.groupby('breath_id')['sign_diff'].sum().to_dict()
+        data['diff_vib'] = data['breath_id'].map(sign_diff_dict)
+
+
+        data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+                   'breath_id_lag2same'], axis=1, inplace=True)
+
+        if 'pressure' in data.columns:
+            data.drop('pressure', axis=1, inplace=True)
+
+        return data.fillna(0)
+
     def setup(self, stage=None):
         if self.cfg.training.debug:
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=196000)
@@ -567,6 +870,9 @@ class VentilatorDataModule(pl.LightningDataModule):
         elif self.cfg.datamodule.make_features_style == 4:
             train = self.make_features4(train)
             test = self.make_features4(test)
+        elif self.cfg.datamodule.make_features_style == 5:
+            train = self.make_features5(train)
+            test = self.make_features5(test)
 
         train_u_out = train[['u_out']].to_numpy().reshape(-1, 80)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
