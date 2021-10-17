@@ -20,3 +20,4 @@ ranger-adabelief==0.1.0
 timm==0.4.12
 torch-optimizer==0.1.0
 wandb==0.12.4
+einops==0.3.2
