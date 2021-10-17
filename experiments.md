@@ -150,4 +150,13 @@ python train.py callbacks.early_stopping.params.patience=50 general.log_code=Fal
 2 - 53
 3 - 108
 4 - 75
-5 - 130
+5 - 130 
+
+===
+conv
+
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__heng model.class_name=src.models.ventilator_model__heng.VentilatorNet model.params.input_dim=53 model.params.init_style=3 model.params.lstm_layers=6 model.params.double_conv=True model.params.conv_out_channels=64 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=128 datamodule=ventilator_datamodule_heng datamodule.make_features_style=2 datamodule.normalize=True datamodule.fold_n=0
+
+conv_out_channels 16, 32, 64
+conv_style 1, 2
+double_conv False, True
