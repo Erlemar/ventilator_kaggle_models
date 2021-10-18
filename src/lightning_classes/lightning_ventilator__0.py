@@ -50,6 +50,7 @@ class VentilatorRegression(pl.LightningModule):
         # data = batch['input']
         # pred = self(data).squeeze(-1)
         pred, pressure_in, pressure_out = self(batch)#.squeeze(-1)
+        pred = pressure_in * (1 - batch['u_out']) + pressure_out * batch['u_out']
         # print('pred', pred)
         # print('train_batch', batch['input'].shape)
         if self.cfg.training.loss_calc_style == 1:
@@ -60,8 +61,8 @@ class VentilatorRegression(pl.LightningModule):
 
         elif self.cfg.training.loss_calc_style == 2:
             mask = batch['u_out'] < 0.5
-            loss1 = self.loss(pressure_in[mask], batch['p'][mask])
-            loss2 = self.loss(pressure_out[~mask], batch['p'][~mask])
+            loss1 = self.loss(pressure_in[mask], batch['p'][mask]).mean()
+            loss2 = self.loss(pressure_out[~mask], batch['p'][~mask]).mean()
             loss = loss1 + loss2
 
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
@@ -78,6 +79,7 @@ class VentilatorRegression(pl.LightningModule):
         # data = batch['input']
         # pred = self(data).squeeze(-1)
         pred, pressure_in, pressure_out = self(batch)#.squeeze(-1)
+        pred = pressure_in * (1 - batch['u_out']) + pressure_out * batch['u_out']
         # print('valid_batch', batch['input'].shape)
         if self.cfg.training.loss_calc_style == 1:
             if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss' or self.cfg.loss.class_name == 'torch.nn.SmoothL1Loss':
@@ -87,8 +89,8 @@ class VentilatorRegression(pl.LightningModule):
 
         elif self.cfg.training.loss_calc_style == 2:
             mask = batch['u_out'] < 0.5
-            loss1 = self.loss(pressure_in[mask], batch['p'][mask])
-            loss2 = self.loss(pressure_out[~mask], batch['p'][~mask])
+            loss1 = self.loss(pressure_in[mask], batch['p'][mask]).mean()
+            loss2 = self.loss(pressure_out[~mask], batch['p'][~mask]).mean()
             loss = loss1 + loss2
         self.log('valid_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
