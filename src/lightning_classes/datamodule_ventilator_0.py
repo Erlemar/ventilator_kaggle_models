@@ -843,6 +843,76 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         return data.fillna(0)
 
+    def make_features6(self, data):
+        # CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
+        CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'u_in_cummean', 'area', 'cross', 'cross2'] + [
+            'R_cate', 'C_cate']
+        LAG_FEATURES = ['breath_time']
+        LAG_FEATURES += [f'u_in_lag_{i}' for i in range(1, self.cfg.datamodule.use_lag + 1)]
+        # LAG_FEATURES += [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
+        LAG_FEATURES += [f'u_in_time{i}' for i in range(1, self.cfg.datamodule.use_lag + 1)]
+        # LAG_FEATURES += [f'u_in_time{i}_back' for i in range(1, USE_LAG+1)]
+        LAG_FEATURES += [f'u_out_lag_{i}' for i in range(1, self.cfg.datamodule.use_lag + 1)]
+        # LAG_FEATURES += [f'u_out_lag_{i}_back' for i in range(1, USE_LAG+1)]
+        # ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
+        ALL_FEATURES = CONT_FEATURES + LAG_FEATURES
+
+        data['time_delta'] = data.groupby('breath_id')['time_step'].diff().fillna(0)
+        data['delta'] = data['time_delta'] * data['u_in']
+        data['area'] = data.groupby('breath_id')['delta'].cumsum()
+
+        data['cross'] = data['u_in'] * data['u_out']
+        data['cross2'] = data['time_step'] * data['u_out']
+
+        data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
+        data['one'] = 1
+        data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
+        data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
+
+        data = data.drop(['count', 'one'], axis=1)
+
+        for lag in range(1, self.cfg.datamodule.use_lag + 1):
+            data[f'breath_id_lag{lag}'] = data['breath_id'].shift(lag).fillna(0)
+            data[f'breath_id_lag{lag}same'] = np.select([data[f'breath_id_lag{lag}'] == data['breath_id']], [1], 0)
+
+            # u_in
+            data[f'u_in_lag_{lag}'] = data['u_in'].shift(lag).fillna(0) * data[f'breath_id_lag{lag}same']
+            # data[f'u_in_lag_{lag}_back'] = data['u_in'].shift(-lag).fillna(0) * data[f'breath_id_lag{lag}same']
+            data[f'u_in_time{lag}'] = data['u_in'] - data[f'u_in_lag_{lag}']
+            # data[f'u_in_time{lag}_back'] = data['u_in'] - data[f'u_in_lag_{lag}_back']
+            data[f'u_out_lag_{lag}'] = data['u_out'].shift(lag).fillna(0) * data[f'breath_id_lag{lag}same']
+            # data[f'u_out_lag_{lag}_back'] = data['u_out'].shift(-lag).fillna(0) * data[f'breath_id_lag{lag}same']
+
+        # breath_time
+        data['time_step_lag'] = data['time_step'].shift(1).fillna(0) * data[f'breath_id_lag{lag}same']
+        data['breath_time'] = data['time_step'] - data['time_step_lag']
+
+        drop_columns = ['time_step_lag']
+        drop_columns += [f'breath_id_lag{i}' for i in range(1, self.cfg.datamodule.use_lag + 1)]
+        drop_columns += [f'breath_id_lag{i}same' for i in range(1, self.cfg.datamodule.use_lag + 1)]
+        data = data.drop(drop_columns, axis=1)
+
+        # fill na by zero
+        data = data.fillna(0)
+
+        c_dic = {10: 0, 20: 1, 50: 2}
+        r_dic = {5: 0, 20: 1, 50: 2}
+        rc_sum_dic = {v: i for i, v in enumerate([15, 25, 30, 40, 55, 60, 70, 100])}
+        rc_dot_dic = {v: i for i, v in enumerate([50, 100, 200, 250, 400, 500, 2500, 1000])}
+
+        data['C_cate'] = data['C'].map(c_dic)
+        data['R_cate'] = data['R'].map(r_dic)
+        data['RC_sum'] = (data['R'] + data['C']).map(rc_sum_dic)
+        data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
+
+        norm_features = CONT_FEATURES + LAG_FEATURES
+        assert norm_features == ALL_FEATURES, 'something went wrong'
+
+        print('data.columns', data.columns)
+        print('ALL_FEATURES', ALL_FEATURES)
+
+        return data[ALL_FEATURES].fillna(0)
+
     def setup(self, stage=None):
         if self.cfg.training.debug:
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=196000)
@@ -873,14 +943,24 @@ class VentilatorDataModule(pl.LightningDataModule):
         elif self.cfg.datamodule.make_features_style == 5:
             train = self.make_features5(train)
             test = self.make_features5(test)
+        elif self.cfg.datamodule.make_features_style == 6:
+            train = self.make_features6(train)
+            test = self.make_features6(test)
 
         train_u_out = train[['u_out']].to_numpy().reshape(-1, 80)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
 
         if self.cfg.datamodule.normalize:
-            RS = RobustScaler()
-            train = RS.fit_transform(train)
-            test = RS.transform(test)
+            if not self.cfg.datamodule.normalize_all:
+                RS = RobustScaler()
+                train = RS.fit_transform(train)
+                test = RS.transform(test)
+            else:
+                RS = RobustScaler()
+                RS.fit(np.vstack([train, test]))
+                train = RS.transform(train)
+                test = RS.transform(test)
+
         else:
             train = train.values
             test = test.values

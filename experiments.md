@@ -162,3 +162,17 @@ conv_style 1, 2
 double_conv False, True
 
 python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__heng1 model.class_name=src.models.ventilator_model__heng1.VentilatorNet model.params.input_dim=53 model.params.init_style=3 model.params.lstm_layers=6 model.params.conv_out_channels=64 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=128 datamodule=ventilator_datamodule_heng datamodule.make_features_style=2 datamodule.normalize=True datamodule.fold_n=0 model.params.conv_layers=5
+
+===
+datamodule.normalize=True
+datamodule.normalize_all=True
+datamodule.make_features_style=6
+datamodule.use_lag=4
+model.params.init_style=12
+model.params.lstm_dim=256
+model.params.num_layers=4
+
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__2 model.class_name=src.models.ventilator_model__2.VentilatorNet model.params.input_dim=23 model.params.init_style=12 model.params.lstm_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=6 datamodule.normalize=True datamodule.fold_n=0 datamodule.normalize_all=True datamodule.use_lag=4 model.params.lstm_dim=256 model.params.num_layers=4
+
+
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__3 model.class_name=src.models.ventilator_model__3.VentilatorNet model.params.input_dim=23 model.params.init_style=12 model.params.lstm_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=6 datamodule.normalize=True datamodule.fold_n=0 datamodule.normalize_all=True datamodule.use_lag=4 model.params.lstm_dim=256 model.params.num_layers=4 training.lightning_module_name=src.lightning_classes.lightning_ventilator__0.VentilatorRegression loss=smoothl1loss training.loss_calc_style=2

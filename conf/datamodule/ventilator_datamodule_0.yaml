@@ -9,4 +9,6 @@ batch_size: 256
 pin_memory: True
 train_len: 6036000
 normalize: True
+normalize_all: False
 make_features_style: 1
+use_lag: 4
