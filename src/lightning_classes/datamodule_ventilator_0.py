@@ -965,7 +965,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         if self.cfg.datamodule.normalize:
             if not self.cfg.datamodule.normalize_all:
                 RS = RobustScaler()
-                RS.fit(train)
+                RS.fit(train.drop(['fold'], axis=1))
                 # train = RS.transform(train)
                 train_data = RS.transform(train.loc[train['fold'] != self.cfg.datamodule.fold_n].drop(['fold'], axis=1))
                 valid_data = RS.transform(train.loc[train['fold'] == self.cfg.datamodule.fold_n].drop(['fold'], axis=1))
