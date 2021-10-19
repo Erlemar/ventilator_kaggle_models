@@ -9,3 +9,4 @@ params:
   n_classes: ${training.n_classes}
   initialize: True
   init_style: 1
+  head_style: 1

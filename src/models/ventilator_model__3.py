@@ -13,6 +13,7 @@ class VentilatorNet(nn.Module):
                  n_classes: int = 1,
                  initialize: bool = True,
                  init_style: int = 1,
+                 head_style: int = 1,
                  ) -> None:
         """
         Model class.
@@ -28,12 +29,18 @@ class VentilatorNet(nn.Module):
         )
         self.lstm = nn.LSTM(dense_dim, lstm_dim, batch_first=True, bidirectional=True, dropout=0.0,
                             num_layers=num_layers)
+        if head_style == 1:
+            self.head = nn.Sequential(
+                nn.Linear(lstm_dim * 2, lstm_dim * 2),
+                nn.LayerNorm(lstm_dim * 2),
+                nn.ReLU()
+            )
+        elif head_style == 2:
+            self.head = nn.Sequential(
+                nn.Linear(lstm_dim * 2, 50),
+                nn.SiLU(),
+            )
 
-        self.head = nn.Sequential(
-            nn.Linear(lstm_dim * 2, lstm_dim * 2),
-            nn.LayerNorm(lstm_dim * 2),
-            nn.ReLU()
-        )
         self.head_pressure = nn.Linear(lstm_dim * 2, 1)
         self.head_pressure_in = nn.Linear(lstm_dim * 2, 1)
         self.head_pressure_out = nn.Linear(lstm_dim * 2, 1)
