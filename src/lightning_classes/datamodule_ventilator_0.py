@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 from omegaconf import DictConfig
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, GroupKFold
 from sklearn.preprocessing import RobustScaler
 from torch.utils.data import DataLoader
 
@@ -856,6 +856,8 @@ class VentilatorDataModule(pl.LightningDataModule):
         # LAG_FEATURES += [f'u_out_lag_{i}_back' for i in range(1, USE_LAG+1)]
         # ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
         ALL_FEATURES = CONT_FEATURES + LAG_FEATURES
+        if 'fold' in data.columns:
+            ALL_FEATURES.append('fold')
 
         data['time_delta'] = data.groupby('breath_id')['time_step'].diff().fillna(0)
         data['delta'] = data['time_delta'] * data['u_in']
@@ -906,6 +908,8 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
 
         norm_features = CONT_FEATURES + LAG_FEATURES
+        if 'fold' in data.columns:
+            norm_features.append('fold')
         assert norm_features == ALL_FEATURES, 'something went wrong'
 
         print('data.columns', data.columns)
@@ -921,7 +925,15 @@ class VentilatorDataModule(pl.LightningDataModule):
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
             test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
 
-        targets = train[['pressure']].to_numpy().reshape(-1, 80)
+        gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds).split(train, train.pressure, groups=train.breath_id)
+        for fold, (_, valid_idx) in enumerate(gkf):
+            train.loc[valid_idx, 'fold'] = fold
+
+        train_targets = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
+        valid_targets = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
+
+        train_u_out_ = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
+        valid_u_out_ = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
         test_targets = np.zeros(len(test)).reshape(-1, 80)
 
         print('Making features')
@@ -947,50 +959,58 @@ class VentilatorDataModule(pl.LightningDataModule):
             train = self.make_features6(train)
             test = self.make_features6(test)
 
-        train_u_out = train[['u_out']].to_numpy().reshape(-1, 80)
+
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
 
         if self.cfg.datamodule.normalize:
             if not self.cfg.datamodule.normalize_all:
                 RS = RobustScaler()
-                train = RS.fit_transform(train)
+                RS.fit(train)
+                # train = RS.transform(train)
+                train_data = RS.transform(train.loc[train['fold'] != self.cfg.datamodule.fold_n].drop(['fold'], axis=1))
+                valid_data = RS.transform(train.loc[train['fold'] == self.cfg.datamodule.fold_n].drop(['fold'], axis=1))
                 test = RS.transform(test)
             else:
                 RS = RobustScaler()
-                RS.fit(np.vstack([train, test]))
-                train = RS.transform(train)
+                RS.fit(np.vstack([train.drop(['fold'], axis=1), test]))
+                # train = RS.transform(train)
+                train_data = RS.transform(train.loc[train['fold'] != self.cfg.datamodule.fold_n].drop(['fold'], axis=1))
+                valid_data = RS.transform(train.loc[train['fold'] == self.cfg.datamodule.fold_n].drop(['fold'], axis=1))
                 test = RS.transform(test)
 
         else:
             train = train.values
             test = test.values
 
-        train = train.reshape(-1, 80, train.shape[-1])
-        test = test.reshape(-1, 80, train.shape[-1])
-        gkf = KFold(n_splits=self.cfg.datamodule.n_folds, shuffle=True, random_state=self.cfg.training.seed)
+        # train = train.reshape(-1, 80, train.shape[-1])
+        train_data = train_data.reshape(-1, 80, train_data.shape[-1])
+        valid_data = valid_data.reshape(-1, 80, valid_data.shape[-1])
+        test = test.reshape(-1, 80, train_data.shape[-1])
+        # gkf = KFold(n_splits=self.cfg.datamodule.n_folds, shuffle=True, random_state=self.cfg.training.seed)
         # if self.cfg.datamodule.split == 'GroupKFold':
         #     gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)
         # elif self.cfg.datamodule.split == 'GroupShuffleSplit':
         #     gkf = GroupShuffleSplit(n_splits=self.cfg.datamodule.n_folds, random_state=self.cfg.training.seed)
 
-        splits = list(gkf.split(X=train, y=targets))
-        train_idx, valid_idx = splits[self.cfg.datamodule.fold_n]
+        # splits = list(gkf.split(X=train, y=targets))
+        # train_idx, valid_idx = splits[self.cfg.datamodule.fold_n]
 
-        train_data = train[train_idx].copy()
-        valid_data = train[valid_idx].copy()
+        # train_data = train[train_idx].copy()
+        # valid_data = train[valid_idx].copy()
 
-        train_u_out_ = train_u_out[train_idx].copy()
-        valid_u_out_ = train_u_out[valid_idx].copy()
-
-        train_targets = targets[train_idx].copy()
-        valid_targets = targets[valid_idx].copy()
+        # train_u_out_ = train_u_out[train_idx].copy()
+        # valid_u_out_ = train_u_out[valid_idx].copy()
+        #
+        # train_targets = targets[train_idx].copy()
+        # valid_targets = targets[valid_idx].copy()
 
         del train
         gc.collect()
 
         # train dataset
         dataset_class = load_obj(self.cfg.datamodule.class_name)
-
+        print('train_data', train_data.shape)
+        print('train_u_out_', train_u_out_.shape)
         self.train_dataset = dataset_class(train_data, mode='train', u_out=train_u_out_, pressure=train_targets)
         self.valid_dataset = dataset_class(valid_data, mode='valid', u_out=valid_u_out_, pressure=valid_targets)
         self.test_dataset = dataset_class(test, mode='test', u_out=test_u_out, pressure=test_targets)

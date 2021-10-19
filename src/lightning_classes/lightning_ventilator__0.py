@@ -65,6 +65,17 @@ class VentilatorRegression(pl.LightningModule):
             loss2 = self.loss(pressure_out[~mask], batch['p'][~mask]).mean()
             loss = loss1 + loss2
 
+        elif self.cfg.training.loss_calc_style == 3:
+            mask = batch['u_out'] < 0.5
+            loss1 = self.loss(pressure_in[mask], batch['p'][mask]).mean()
+            loss2 = self.loss(pressure_out[~mask], batch['p'][~mask]).mean()
+            loss0 = loss1 + loss2
+            if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss' or self.cfg.loss.class_name == 'torch.nn.SmoothL1Loss':
+                loss = self.loss(pred, batch['p']).mean()
+            else:
+                loss = self.loss(pred, batch['p'], batch['u_out']).mean()
+            loss += loss0
+
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         for metric in self.metrics:
@@ -92,6 +103,18 @@ class VentilatorRegression(pl.LightningModule):
             loss1 = self.loss(pressure_in[mask], batch['p'][mask]).mean()
             loss2 = self.loss(pressure_out[~mask], batch['p'][~mask]).mean()
             loss = loss1 + loss2
+
+        elif self.cfg.training.loss_calc_style == 3:
+            mask = batch['u_out'] < 0.5
+            loss1 = self.loss(pressure_in[mask], batch['p'][mask]).mean()
+            loss2 = self.loss(pressure_out[~mask], batch['p'][~mask]).mean()
+            loss0 = loss1 + loss2
+            if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss' or self.cfg.loss.class_name == 'torch.nn.SmoothL1Loss':
+                loss = self.loss(pred, batch['p']).mean()
+            else:
+                loss = self.loss(pred, batch['p'], batch['u_out']).mean()
+            loss += loss0
+
         self.log('valid_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         for metric in self.metrics:

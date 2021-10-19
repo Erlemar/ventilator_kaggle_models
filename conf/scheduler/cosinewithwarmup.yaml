@@ -1,9 +1,10 @@
-class_name: src.schedulers.linear_schedule_with_warmup.LinearScheduleWithWarmupConfig
+class_name: src.schedulers.cosine_schedule_with_warmup.CosineScheduleWithWarmupConfig
 step: step
 monitor: train_${training.metric}
 params:
   warmup_prop: 0.1
   last_epoch: -1
+  num_cycles: 0.5
   epochs: ${trainer.max_epochs}
   train_len: ${datamodule.train_len}
   n_folds: ${datamodule.n_folds}
