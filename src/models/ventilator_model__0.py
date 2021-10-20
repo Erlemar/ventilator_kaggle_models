@@ -11,6 +11,7 @@ class VentilatorNet(nn.Module):
                  num_layers: int = 256,
                  n_classes: int = 1,
                  initialize: bool = True,
+                 single_lstm: bool = True,
                  init_style: int = 1,
                  ) -> None:
         """
@@ -20,13 +21,22 @@ class VentilatorNet(nn.Module):
             cfg: main config
         """
         super().__init__()
-        self.lstm0 = nn.LSTM(input_dim, lstm_dim, batch_first=True, bidirectional=True, num_layers=num_layers)
-        self.lstms = nn.ModuleList([nn.LSTM(lstm_dim * 4 // (2 ** (i + 1)),
+        self.lstm0 = nn.LSTM(input_dim, lstm_dim, batch_first=True, bidirectional=True, num_layers=num_layers if not single_lstm else 1)
+        self.single_lstm = single_lstm
+        if single_lstm:
+            self.lstms = nn.LSTM(lstm_dim * 2, lstm_dim, batch_first=True, bidirectional=True, dropout=0.0,
+                            num_layers=num_layers - 1)
+            dense_input_dim = 2 * lstm_dim
+        else:
+            self.lstms = nn.ModuleList([nn.LSTM(lstm_dim * 4 // (2 ** (i + 1)),
                                             lstm_dim // (2 ** (i + 1)),
                                             batch_first=True, bidirectional=True, num_layers=num_layers)
                                     for i in range(lstm_layers - 1)])
+            dense_input_dim = 4 * lstm_dim // (2 ** lstm_layers)
 
-        self.linear1 = nn.Linear(4 * lstm_dim // (2 ** lstm_layers), logit_dim)
+
+
+        self.linear1 = nn.Linear(dense_input_dim, logit_dim)
         self.act = nn.SELU()
         self.linear2 = nn.Linear(logit_dim, n_classes)
 
@@ -215,8 +225,12 @@ class VentilatorNet(nn.Module):
 
     def forward(self, x):
         features, _ = self.lstm0(x['input'])
-        for lstm in self.lstms:
-            features, _ = lstm(features)
+
+        if self.single_lstm:
+            features, _ = self.lstms(features)
+        else:
+            for lstm in self.lstms:
+                features, _ = lstm(features)
         features = self.linear1(features)
         features = self.act(features)
         pred = self.linear2(features)

@@ -12,6 +12,7 @@ class VentilatorNet(nn.Module):
                  num_layers: int = 1,
                  n_classes: int = 1,
                  initialize: bool = True,
+                 single_lstm: bool = True,
                  init_style: int = 1,
                  head_style: int = 1,
                  ) -> None:
@@ -27,8 +28,15 @@ class VentilatorNet(nn.Module):
             nn.Linear(input_dim, dense_dim),
             nn.LayerNorm(dense_dim),
         )
-        self.lstm = nn.LSTM(dense_dim, lstm_dim, batch_first=True, bidirectional=True, dropout=0.0,
+        if single_lstm:
+            self.lstm = nn.LSTM(dense_dim, lstm_dim, batch_first=True, bidirectional=True, dropout=0.0,
                             num_layers=num_layers)
+        else:
+            self.lstm = nn.ModuleList([nn.LSTM(lstm_dim * 4 // (2 ** (i + 1)),
+                                            lstm_dim // (2 ** (i + 1)),
+                                            batch_first=True, bidirectional=True, num_layers=num_layers)
+                                    for i in range(lstm_layers)])
+            lstm_dim = 2 * lstm_dim // (2 ** lstm_layers)
         if head_style == 1:
             self.head = nn.Sequential(
                 nn.Linear(lstm_dim * 2, logit_dim),

@@ -179,3 +179,40 @@ python train.py callbacks.early_stopping.params.patience=50 general.log_code=Fal
 
 
 python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__3 model.class_name=src.models.ventilator_model__3.VentilatorNet model.params.input_dim=29 model.params.init_style=12 model.params.lstm_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adamw training.lr=0.005 optimizer.params.weight_decay=0.001 scheduler=cosinewithwarmup datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=6 datamodule.normalize=True datamodule.fold_n=0 datamodule.normalize_all=True datamodule.use_lag=6 model.params.lstm_dim=1024 model.params.num_layers=6 training.lightning_module_name=src.lightning_classes.lightning_ventilator__0.VentilatorRegression loss=mae training.loss_calc_style=1
+
+==
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=50 model.params.init_style=3 model.params.lstm_layers=6 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0
+
+# stacked layers in original
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=50 model.params.init_style=3 model.params.lstm_layers=6 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0 model.params.single_lstm=True model.params.num_layers=4
+
+
+# original
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=50 model.params.init_style=3 model.params.lstm_layers=6 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=1 datamodule.normalize=False datamodule.fold_n=0 model.params.single_lstm=False model.params.num_layers=1
+
+MAKE OOF
+# ПОЧЕМУ СТАЛО ХУЖЕ?
+фолды
+фичи
+модель
+
+!!!!во-первых, найти лучшую версию.
+!!!!во-вторых, понять в чем разница.
+==
+анализировать предсказания моделей и их ошибки
+мои нововведения
+взять как старт ту новую на 20 фолдах и добавлять к ней все
+- фичи
+- нормализация всего
+- модель
+- 2 головы
+- лоссы
+- adamw
+- scheduler
+- 950 classes? or postprosess predictions?!!!!!!!!!!
+- swa
+- 3 best models
+  - cnn in header
+
+          self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1)
+          self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)

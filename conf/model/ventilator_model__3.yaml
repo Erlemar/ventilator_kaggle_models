@@ -4,6 +4,7 @@ params:
   dense_dim: 64
   lstm_dim: 256
   lstm_layers: 4
+  single_lstm: True
   logit_dim: 50
   num_layers: 1
   n_classes: ${training.n_classes}

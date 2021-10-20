@@ -979,7 +979,8 @@ class VentilatorDataModule(pl.LightningDataModule):
                 test = RS.transform(test)
 
         else:
-            train = train.values
+            train_data = train.loc[train['fold'] != self.cfg.datamodule.fold_n].drop(['fold'], axis=1).values
+            valid_data = train.loc[train['fold'] == self.cfg.datamodule.fold_n].drop(['fold'], axis=1).values
             test = test.values
 
         # train = train.reshape(-1, 80, train.shape[-1])

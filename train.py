@@ -8,7 +8,9 @@ import pytorch_lightning as pl
 import torch
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from sklearn.model_selection import GroupKFold
 
+from src.metrics.ventilator_mae import VentilatorMAE
 from src.utils.technical_utils import load_obj
 from src.utils.utils import set_seed, save_useful_info
 
@@ -87,6 +89,32 @@ def run(cfg: DictConfig) -> None:
             predictions.extend(pred.reshape(-1, ).detach().cpu().numpy())
         sub['pressure'] = predictions
         sub.to_csv(f'submission_{run_name}.csv', index=False)
+
+        if cfg.training.debug:
+            oof = pd.read_csv(os.path.join(cfg.datamodule.path, 'train.csv'), nrows=196000)
+        else:
+            oof = pd.read_csv(os.path.join(cfg.datamodule.path, 'train.csv'))
+
+        gkf = GroupKFold(n_splits=cfg.datamodule.n_folds).split(oof, oof.pressure, groups=oof.breath_id)
+        for fold, (_, valid_idx) in enumerate(gkf):
+            oof.loc[valid_idx, 'fold'] = fold
+        oof = oof[['id', 'breath_id', 'pressure', 'fold', 'u_out']]
+        print(f'{cfg.datamodule.fold_n=}')
+        y_true = oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'pressure']
+        oof['pressure'] = 0
+
+        prediction = trainer.predict(model, dm.val_dataloader())
+        predictions = []
+        for pred in prediction:
+            predictions.extend(pred.reshape(-1, ).detach().cpu().numpy())
+
+        oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'pressure'] = predictions
+        print('ventilator mae',
+              VentilatorMAE()(torch.tensor(oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'pressure'].values),
+                              torch.tensor(y_true.values),
+                              torch.tensor(oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'u_out'].values)))
+        oof.to_csv(f'{run_name}_oof_fold_{cfg.datamodule.fold_n}.csv', index=False)
+
     print(run_name)
 
 
