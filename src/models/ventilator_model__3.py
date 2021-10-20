@@ -12,9 +12,9 @@ class VentilatorNet(nn.Module):
                  num_layers: int = 1,
                  n_classes: int = 1,
                  initialize: bool = True,
-                 single_lstm: bool = True,
                  init_style: int = 1,
                  head_style: int = 1,
+                 single_lstm: bool = True,
                  ) -> None:
         """
         Model class.
@@ -28,27 +28,26 @@ class VentilatorNet(nn.Module):
             nn.Linear(input_dim, dense_dim),
             nn.LayerNorm(dense_dim),
         )
-        if single_lstm:
-            self.lstm = nn.LSTM(dense_dim, lstm_dim, batch_first=True, bidirectional=True, dropout=0.0,
+        self.lstm = nn.LSTM(dense_dim, lstm_dim, batch_first=True, bidirectional=True, dropout=0.0,
                             num_layers=num_layers)
-        else:
-            self.lstm = nn.ModuleList([nn.LSTM(lstm_dim * 4 // (2 ** (i + 1)),
-                                            lstm_dim // (2 ** (i + 1)),
-                                            batch_first=True, bidirectional=True, num_layers=num_layers)
-                                    for i in range(lstm_layers)])
-            lstm_dim = 2 * lstm_dim // (2 ** lstm_layers)
         if head_style == 1:
             self.head = nn.Sequential(
+                nn.Linear(lstm_dim * 2, lstm_dim * 2),
+                nn.LayerNorm(lstm_dim * 2),
                 nn.Linear(lstm_dim * 2, logit_dim),
                 nn.LayerNorm(logit_dim),
                 nn.ReLU()
             )
         elif head_style == 2:
             self.head = nn.Sequential(
+                nn.Linear(lstm_dim * 2, 50),
                 nn.Linear(lstm_dim * 2, logit_dim),
                 nn.SiLU(),
             )
 
+        self.head_pressure = nn.Linear(lstm_dim * 2, 1)
+        self.head_pressure_in = nn.Linear(lstm_dim * 2, 1)
+        self.head_pressure_out = nn.Linear(lstm_dim * 2, 1)
         self.head_pressure = nn.Linear(logit_dim, 1)
         self.head_pressure_in = nn.Linear(logit_dim, 1)
         self.head_pressure_out = nn.Linear(logit_dim, 1)
@@ -280,3 +279,4 @@ class VentilatorNet(nn.Module):
         # print('pressure_in', pressure_in.shape)
         # print('pressure_out', pressure_out.shape)
         return pred.squeeze(-1), pressure_in.squeeze(-1), pressure_out.squeeze(-1)
+
