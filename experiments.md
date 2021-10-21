@@ -157,6 +157,7 @@ python train.py callbacks.early_stopping.params.patience=50 general.log_code=Fal
 9 - 112
 10 - 276
 11 - 158
+12 - 153
 ===
 conv
 
