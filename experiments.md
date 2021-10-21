@@ -154,6 +154,7 @@ python train.py callbacks.early_stopping.params.patience=50 general.log_code=Fal
 6 - 145
 7 - 149
 9 - 112
+10 - 276
 ===
 conv
 
@@ -211,7 +212,7 @@ MAKE OOF
 - 2 головы
 - лоссы
 - adamw
-- scheduler
+- scheduler LESS AGRESSIVE
 - 950 classes? or postprosess predictions?!!!!!!!!!!
 - swa
 - 3 best models

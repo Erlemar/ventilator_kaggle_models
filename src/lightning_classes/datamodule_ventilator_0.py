@@ -1383,6 +1383,116 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         return data.fillna(0)
 
+    def make_features10(self, data):
+        data['area'] = data['time_step'] * data['u_in']
+        data['area'] = data.groupby('breath_id')['area'].cumsum()
+
+        data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
+
+        lags = [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        for lag in lags:
+            data[f'u_in_lag{lag}'] = data.groupby('breath_id')['u_in'].shift(lag)
+            data[f'u_out_lag{lag}'] = data.groupby('breath_id')['u_out'].shift(lag)
+
+            data[f'u_in_diff{lag}'] = data['u_in'] - data[f'u_in_lag{lag}']
+            data[f'u_out_diff{lag}'] = data['u_out'] - data[f'u_out_lag{lag}']
+
+        data = data.fillna(0)
+
+        data['breath_id__u_in__max'] = data.groupby(['breath_id'])['u_in'].transform('max')
+        data['breath_id__u_out__max'] = data.groupby(['breath_id'])['u_out'].transform('max')
+        data['breath_id__u_in__diffmax'] = data['breath_id__u_in__max'] - data['u_in']
+        data['breath_id__u_in__diffmean'] = data['breath_id__u_out__max'] - data['u_in']
+
+        data['cross'] = data['u_in'] * data['u_out']
+        data['cross2'] = data['time_step'] * data['u_out']
+
+        data['one'] = 1
+        data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
+        data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
+
+        data['breath_id_lag'] = data['breath_id'].shift(1).fillna(0)
+        data['breath_id_lag2'] = data['breath_id'].shift(2).fillna(0)
+        data['breath_id_lagsame'] = np.select([data['breath_id_lag'] == data['breath_id']], [1], 0)
+        data['breath_id_lag2same'] = np.select([data['breath_id_lag2'] == data['breath_id']], [1], 0)
+        data['breath_id__u_in_lag'] = data['u_in'].shift(1).fillna(0)
+        data['breath_id__u_in_lag'] = data['breath_id__u_in_lag'] * data['breath_id_lagsame']
+        data['breath_id__u_in_lag2'] = data['u_in'].shift(2).fillna(0)
+        data['breath_id__u_in_lag2'] = data['breath_id__u_in_lag2'] * data['breath_id_lag2same']
+
+        c_dic = {10: 0, 20: 1, 50: 2}
+        r_dic = {5: 0, 20: 1, 50: 2}
+        rc_sum_dic = {v: i for i, v in enumerate([15, 25, 30, 40, 55, 60, 70, 100])}
+        rc_dot_dic = {v: i for i, v in enumerate([50, 100, 200, 250, 400, 500, 2500, 1000])}
+
+        data['C_cate'] = data['C'].map(c_dic)
+        data['R_cate'] = data['R'].map(r_dic)
+        data['RC_sum'] = (data['R'] + data['C']).map(rc_sum_dic)
+        data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
+
+        data['R_sum_c'] = (data['R'] + data['C']).astype(str)
+        data['R_mult_c'] = (data['R'] * data['C']).astype(str)
+        data['R'] = data['R'].astype(str)
+        data['C'] = data['C'].astype(str)
+        data['R__C'] = data["R"].astype(str) + '__' + data["C"].astype(str)
+        data = pd.get_dummies(data)
+
+        data['time_step_diff'] = data['time_step'] - data.groupby('breath_id')['time_step'].shift().fillna(0)
+
+        # data[["15_out_sum", "15_out_min", "15_out_max", "15_out_mean", "15_out_std"]] = (data \
+        #                                                                .groupby('breath_id')['u_out'] \
+        #                                                                .rolling(window=15, min_periods=1) \
+        #                                                                .agg({"15_out_sum": "sum",
+        #                                                                      "15_out_min": "min",
+        #                                                                      "15_out_max": "max",
+        #                                                                      "15_out_mean": "mean",
+        #                                                                      "15_out_std": "std"
+        #                                                                      }).reset_index(level=0, drop=True))
+
+        for window in [2, 3, 4, 5, 7, 10, 15, 20, 30, 40, 45]:
+            data[[f"{window}_in_sum", f"{window}_in_min", f"{window}_in_max",
+                  f"{window}_in_mean", f"{window}_in_std"]] = (data.groupby('breath_id')['u_in'].rolling(window=window,
+                                                                                                         min_periods=1) \
+                                                                                        .agg({f"{window}_in_sum": "sum",
+                                                                                              f"{window}_in_min": "min",
+                                                                                              f"{window}_in_max": "max",
+                                                                                              f"{window}_in_mean": "mean",
+                                                                                              f"{window}_in_std": "std"
+                                                                                              }).reset_index(level=0,
+                                                                                                             drop=True))
+
+            data[[f"{window}_out_sum", f"{window}_out_min", f"{window}_out_max",
+                  f"{window}_out_mean", f"{window}_out_std"]] = (data.groupby('breath_id')['u_out'].rolling(window=window,
+                                                                                                         min_periods=1) \
+                                                                                        .agg({f"{window}_out_sum": "sum",
+                                                                                              f"{window}_out_min": "min",
+                                                                                              f"{window}_out_max": "max",
+                                                                                              f"{window}_out_mean": "mean",
+                                                                                              f"{window}_out_std": "std"
+                                                                                              }).reset_index(level=0,
+                                                                                                             drop=True))
+
+        for halflife in [2, 3, 4, 5, 7, 10, 15, 20, 30, 40, 45]:
+
+            data[f'ewm_u_in_mean_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).mean().reset_index(level=0,
+                                                                                                          drop=True)
+
+            data[f'ewm_u_in_std_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).std().reset_index(level=0, drop=True)
+            data[f'ewm_u_in_corr_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).corr().reset_index(level=0,
+                                                                                                          drop=True)
+
+        data['expand_mean'] = data.groupby('breath_id')['u_in'].expanding(2).mean().reset_index(level=0, drop=True)
+        data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
+        data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
+
+        data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+                   'breath_id_lag2same'], axis=1, inplace=True)
+
+        if 'pressure' in data.columns:
+            data.drop('pressure', axis=1, inplace=True)
+
+        return data.fillna(0)
+
     def setup(self, stage=None):
         if self.cfg.training.debug:
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=196000)
@@ -1433,11 +1543,14 @@ class VentilatorDataModule(pl.LightningDataModule):
         elif self.cfg.datamodule.make_features_style == 9:
             train = self.make_features9(train)
             test = self.make_features9(test)
+        elif self.cfg.datamodule.make_features_style == 10:
+            train = self.make_features10(train)
+            test = self.make_features10(test)
         else:
             raise ValueError
 
 
-        print('f{train.columns = }')
+        print('train.columns', train.columns)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
 
         if self.cfg.datamodule.normalize:
