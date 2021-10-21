@@ -153,8 +153,10 @@ python train.py callbacks.early_stopping.params.patience=50 general.log_code=Fal
 5 - 130 
 6 - 145
 7 - 149
+8 - 149
 9 - 112
 10 - 276
+11 - 159
 ===
 conv
 
@@ -206,6 +208,7 @@ MAKE OOF
 мои нововведения
 взять как старт ту новую на 20 фолдах и добавлять к ней все
 - try make_features2
+- taking the cut of the sequence from 80 to 35 or 32
 - фичи
 - нормализация всего
 - модель
@@ -219,8 +222,38 @@ MAKE OOF
 - 3 best models
 - cnn in header 
 - pretrain on predicting next?
-
+- https://www.kaggle.com/c/ventilator-pressure-prediction/discussion/280356#1552537
           self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1)
           self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)
 
 ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=108 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=3 datamodule.n_folds=20 datamodule.fold_n=0
+
+df['Ruin'] = df['R'].astype(float) * df['u_in'].astype(float)
+df['Cuin'] = df['C'].astype(float) * df['u_in'].astype(float)
+
+ffta = lambda x: np.abs(fft(np.append(x.values,x.values[0]))[:80])
+ffta.__name__ = 'ffta'
+
+fftw = lambda x: np.abs(fft(np.append(x.values,x.values[0])*w)[:80])
+fftw.__name__ = 'fftw'
+
+train['fft_u_in'] = train.groupby('breath_id')['u_in'].transform(ffta)
+train['fft_u_in_w'] = train.groupby('breath_id')['u_in'].transform(fftw)
+train['analytical'] = train.groupby('breath_id')['u_in'].transform(hilbert)
+train['envelope'] = np.abs(train['analytical'])
+train['phase'] = np.angle(train['analytical'])
+train['unwrapped_phase'] = train.groupby('breath_id')['phase'].transform(np.unwrap)
+train['phase_shift1'] = train.groupby('breath_id')['unwrapped_phase'].shift(1).astype(np.float32)
+train['IF'] = train['unwrapped_phase'] - train['phase_shift1'].astype(np.float32)
+
+new best!
+0.1516
+ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
+
+
+0.1534
+ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=112 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=9 datamodule.n_folds=20 datamodule.fold_n=0 datamodule.normalize_all=True
+
+0.1567
+ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=108 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=3 datamodule.normalize_all=True datamodule.n_folds=20 datamodule.fold_n=0
+
