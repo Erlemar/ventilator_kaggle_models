@@ -151,7 +151,8 @@ python train.py callbacks.early_stopping.params.patience=50 general.log_code=Fal
 3 - 108
 4 - 75
 5 - 130 
-
+6 - 145
+7 - 149
 ===
 conv
 
@@ -202,6 +203,7 @@ MAKE OOF
 анализировать предсказания моделей и их ошибки
 мои нововведения
 взять как старт ту новую на 20 фолдах и добавлять к ней все
+- try make_features2
 - фичи
 - нормализация всего
 - модель
@@ -216,3 +218,5 @@ MAKE OOF
 
           self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1)
           self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)
+
+ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=108 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=3 datamodule.n_folds=20 datamodule.fold_n=0
