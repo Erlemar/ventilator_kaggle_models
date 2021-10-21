@@ -1524,8 +1524,6 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['phase_shift1'] = data.groupby('breath_id')['unwrapped_phase'].shift(1).astype(np.float32)
         data['IF'] = data['unwrapped_phase'] - data['phase_shift1'].astype(np.float32)
 
-
-
         data['area'] = data['time_step'] * data['u_in']
         data['area'] = data.groupby('breath_id')['area'].cumsum()
 
@@ -1657,7 +1655,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
 
         data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
-                   'breath_id_lag2same'], axis=1, inplace=True)
+                   'breath_id_lag2same', 'analytical'], axis=1, inplace=True)
 
         if 'pressure' in data.columns:
             data.drop('pressure', axis=1, inplace=True)
