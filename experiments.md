@@ -214,9 +214,11 @@ MAKE OOF
 - adamw
 - scheduler LESS AGRESSIVE
 - 950 classes? or postprosess predictions?!!!!!!!!!!
+- голова на предсказание следующего значения
 - swa
 - 3 best models
-  - cnn in header
+- cnn in header 
+- pretrain on predicting next?
 
           self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1)
           self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)

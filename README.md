@@ -1,35 +1,11 @@
-# tempest
-
-[![DeepSource](https://static.deepsource.io/deepsource-badge-light-mini.svg)](https://deepsource.io/gh/Erlemar/pytorch_tempest/?ref=repository-badge)
-
-This repository has my pipeline for training neural nets.
-
-Main frameworks used:
-
-* [hydra](https://github.com/facebookresearch/hydra)
-* [pytorch-lightning](https://github.com/PyTorchLightning/pytorch-lightning)
-
-The main ideas of the pipeline:
-
-* all parameters and modules are defined in configs;
-* prepare configs beforehand for different optimizers/schedulers and so on, so it is easy to switch between them;
-* have templates for different deep learning tasks. Currently, image classification and named entity recognition are supported;
-
-Examples of running the pipeline:
-This will run training on MNIST (data will be downloaded):
+Current best version:
 ```shell
->>> python train.py --config-name mnist_config model.encoder.params.to_one_channel=True
+ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=108 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=3 datamodule.n_folds=20 datamodule.fold_n=0
 ```
+REPLACE THE datamodule.path with your path
 
-The default run:
 
-```shell
->>> python train.py
-```
 
-The default version of the pipeline is run on imagenette dataset. To do it, download the data from this repository:
-https://github.com/fastai/imagenette
-unzip it and define the path to it in conf/datamodule/image_classification.yaml path
 
 ```shell
 python train.py datamodule.class_name=src.datasets.ventilator_dataset.VentilatorDataset1 model=ventilator_model_1
