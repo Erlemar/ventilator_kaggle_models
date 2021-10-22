@@ -1847,6 +1847,9 @@ class VentilatorDataModule(pl.LightningDataModule):
             print('Reading features')
             train = pd.read_feather(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.feather'))
             test = pd.read_feather(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.feather'))
+            gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds).split(train, train.pressure, groups=train.breath_id)
+            for fold, (_, valid_idx) in enumerate(gkf):
+                train.loc[valid_idx, 'fold'] = fold
             train_targets = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
             valid_targets = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
 
