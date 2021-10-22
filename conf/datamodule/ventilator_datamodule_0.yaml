@@ -12,3 +12,4 @@ normalize: True
 normalize_all: False
 make_features_style: 1
 use_lag: 4
+top_n: False

@@ -246,7 +246,11 @@ train['phase'] = np.angle(train['analytical'])
 train['unwrapped_phase'] = train.groupby('breath_id')['phase'].transform(np.unwrap)
 train['phase_shift1'] = train.groupby('breath_id')['unwrapped_phase'].shift(1).astype(np.float32)
 train['IF'] = train['unwrapped_phase'] - train['phase_shift1'].astype(np.float32)
-
+--
+df['time_gap'] = df['time_step'] - df.shift(1).fillna(0)['time_step']
+df['u_in_gap'] = df['u_in'] - df.shift(1).fillna(0)['u_in']
+df['u_in_rate'] = df['u_in_gap'] / df['time_gap']
+--
 new best!
 0.1516
 ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0

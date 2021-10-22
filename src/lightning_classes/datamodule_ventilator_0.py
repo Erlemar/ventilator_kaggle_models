@@ -1917,6 +1917,27 @@ class VentilatorDataModule(pl.LightningDataModule):
         print('train.columns', train.columns)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
 
+        top_columns = ['u_in_lagback_diff2', 'u_in_diff1', 'u_in_diff4', 'u_in_diff2',
+       'u_in_rolling_mean2', 'u_in', 'u_in_diff3', 'breath_id__u_in_lag',
+       'u_in_rolling_min4', 'u_in_rolling_std10', 'rolling_10_std',
+       'u_in_rolling_max10', 'u_in_rolling_min2', 'u_in_lag_back3',
+       '15_in_max', 'ewm_u_in_mean', 'ewm_u_in_std',
+       'breath_id__u_in__diffmax', 'u_in_rolling_max4', 'u_in_cummean',
+       '45_in_max', '45_in_min', 'area', 'R_50', 'C_10', 'R_sum_c_100',
+       'R__C_50__50', 'R__C_5__10', 'R_sum_c_30', 'R_sum_c_55',
+       'time_step_diff', 'R_sum_c_40', 'R_20', 'R_mult_c_2500',
+       'R_mult_c_50', 'C_20', 'C_50', 'R_mult_c_1000', 'u_out_lag2',
+       'R_mult_c_400', 'R__C_50__20', 'R__C_20__10', 'u_in_rolling_mean4',
+       'R_mult_c_250', 'R__C_20__50', 'u_out_lagback_diff1',
+       'u_out_diff1', 'time_step', '15_out_mean', 'u_out_lag_back4',
+       'u_out_lag_back1', 'u_out_lag3', 'cross2', 'R__C_5__20',
+       'u_out_lag_back10']
+        if self.cfg.datamodule.top_n != False:
+            top_columns = top_columns[:self.cfg.datamodule.top_n]
+            train = train[top_columns + ['fold']]
+            test = test[top_columns]
+
+
         if self.cfg.datamodule.normalize:
             if not self.cfg.datamodule.normalize_all:
                 RS = RobustScaler()
