@@ -346,9 +346,6 @@ class VentilatorDataModule(pl.LightningDataModule):
         data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
                    'breath_id_lag2same'], axis=1, inplace=True)
 
-        if 'pressure' in data.columns:
-            data.drop('pressure', axis=1, inplace=True)
-
         return data.fillna(0)
 
     def make_features4(self, data):
@@ -1184,9 +1181,6 @@ class VentilatorDataModule(pl.LightningDataModule):
         data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
                    'breath_id_lag2same'], axis=1, inplace=True)
 
-        if 'pressure' in data.columns:
-            data.drop('pressure', axis=1, inplace=True)
-
         return data.fillna(0)
 
     def make_features9(self, data):
@@ -1849,56 +1843,75 @@ class VentilatorDataModule(pl.LightningDataModule):
         for fold, (_, valid_idx) in enumerate(gkf):
             train.loc[valid_idx, 'fold'] = fold
 
-        train_targets = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
-        valid_targets = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
+        if os.path.exists(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.feather')):
+            print('Reading features')
+            train = pd.read_feather(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.feather'))
+            test = pd.read_feather(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.feather'))
+            train_targets = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
+            valid_targets = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
 
-        train_u_out_ = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
-        valid_u_out_ = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
-        test_targets = np.zeros(len(test)).reshape(-1, 80)
-
-        print('Making features')
-        if self.cfg.datamodule.make_features_style == 0:
-            train = self.make_features(train)
-            test = self.make_features(test)
-        elif self.cfg.datamodule.make_features_style == 1:
-            train = self.make_features1(train)
-            test = self.make_features1(test)
-        elif self.cfg.datamodule.make_features_style == 2:
-            train = self.make_features2(train)
-            test = self.make_features2(test)
-        elif self.cfg.datamodule.make_features_style == 3:
-            train = self.make_features3(train)
-            test = self.make_features3(test)
-        elif self.cfg.datamodule.make_features_style == 4:
-            train = self.make_features4(train)
-            test = self.make_features4(test)
-        elif self.cfg.datamodule.make_features_style == 5:
-            train = self.make_features5(train)
-            test = self.make_features5(test)
-        elif self.cfg.datamodule.make_features_style == 6:
-            train = self.make_features6(train)
-            test = self.make_features6(test)
-        elif self.cfg.datamodule.make_features_style == 7:
-            train = self.make_features7(train)
-            test = self.make_features7(test)
-        elif self.cfg.datamodule.make_features_style == 8:
-            train = self.make_features8(train)
-            test = self.make_features8(test)
-        elif self.cfg.datamodule.make_features_style == 9:
-            train = self.make_features9(train)
-            test = self.make_features9(test)
-        elif self.cfg.datamodule.make_features_style == 10:
-            train = self.make_features10(train)
-            test = self.make_features10(test)
-        elif self.cfg.datamodule.make_features_style == 11:
-            train = self.make_features11(train)
-            test = self.make_features11(test)
-        elif self.cfg.datamodule.make_features_style == 12:
-            train = self.make_features12(train)
-            test = self.make_features12(test)
+            train_u_out_ = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
+            valid_u_out_ = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
+            test_targets = np.zeros(len(test)).reshape(-1, 80)
         else:
-            raise ValueError
 
+            train_targets = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
+            valid_targets = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
+
+            train_u_out_ = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
+            valid_u_out_ = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
+            test_targets = np.zeros(len(test)).reshape(-1, 80)
+
+            print('Making features')
+            if self.cfg.datamodule.make_features_style == 0:
+                train = self.make_features(train)
+                test = self.make_features(test)
+            elif self.cfg.datamodule.make_features_style == 1:
+                train = self.make_features1(train)
+                test = self.make_features1(test)
+            elif self.cfg.datamodule.make_features_style == 2:
+                train = self.make_features2(train)
+                test = self.make_features2(test)
+            elif self.cfg.datamodule.make_features_style == 3:
+                train = self.make_features3(train)
+                test = self.make_features3(test)
+            elif self.cfg.datamodule.make_features_style == 4:
+                train = self.make_features4(train)
+                test = self.make_features4(test)
+            elif self.cfg.datamodule.make_features_style == 5:
+                train = self.make_features5(train)
+                test = self.make_features5(test)
+            elif self.cfg.datamodule.make_features_style == 6:
+                train = self.make_features6(train)
+                test = self.make_features6(test)
+            elif self.cfg.datamodule.make_features_style == 7:
+                train = self.make_features7(train)
+                test = self.make_features7(test)
+            elif self.cfg.datamodule.make_features_style == 8:
+                train = self.make_features8(train)
+                test = self.make_features8(test)
+            elif self.cfg.datamodule.make_features_style == 9:
+                train = self.make_features9(train)
+                test = self.make_features9(test)
+            elif self.cfg.datamodule.make_features_style == 10:
+                train = self.make_features10(train)
+                test = self.make_features10(test)
+            elif self.cfg.datamodule.make_features_style == 11:
+                train = self.make_features11(train)
+                test = self.make_features11(test)
+            elif self.cfg.datamodule.make_features_style == 12:
+                train = self.make_features12(train)
+                test = self.make_features12(test)
+            else:
+                raise ValueError
+
+            train.to_feather(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.feather'))
+            test.to_feather(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.feather'))
+
+        if 'pressure' in train.columns:
+            train.drop('pressure', axis=1, inplace=True)
+        if 'pressure' in test.columns:
+            test.drop('pressure', axis=1, inplace=True)
 
         print('train.columns', train.columns)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
