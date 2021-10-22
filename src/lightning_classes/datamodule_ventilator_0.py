@@ -343,9 +343,6 @@ class VentilatorDataModule(pl.LightningDataModule):
         data[["15_out_mean"]] = data.groupby('breath_id')['u_out'].rolling(window=15, min_periods=1).agg(
             {"15_out_mean": "mean"}).reset_index(level=0, drop=True)
 
-        data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
-                   'breath_id_lag2same'], axis=1, inplace=True)
-
         return data.fillna(0)
 
     def make_features4(self, data):
@@ -1178,9 +1175,6 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
         data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
 
-        data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
-                   'breath_id_lag2same'], axis=1, inplace=True)
-
         return data.fillna(0)
 
     def make_features9(self, data):
@@ -1832,21 +1826,11 @@ class VentilatorDataModule(pl.LightningDataModule):
         return data.fillna(0)
 
     def setup(self, stage=None):
-        if self.cfg.training.debug:
-            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=196000)
-            test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'), nrows=80000)
-        else:
-            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
-            test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
 
-        gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds).split(train, train.pressure, groups=train.breath_id)
-        for fold, (_, valid_idx) in enumerate(gkf):
-            train.loc[valid_idx, 'fold'] = fold
-
-        if os.path.exists(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.feather')):
+        if os.path.exists(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.csv')):
             print('Reading features')
-            train = pd.read_feather(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.feather'))
-            test = pd.read_feather(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.feather'))
+            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.csv'))
+            test = pd.read_csv(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.csv'))
             gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds).split(train, train.pressure, groups=train.breath_id)
             for fold, (_, valid_idx) in enumerate(gkf):
                 train.loc[valid_idx, 'fold'] = fold
@@ -1858,6 +1842,16 @@ class VentilatorDataModule(pl.LightningDataModule):
             valid_u_out_ = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'u_out'].copy().values.reshape(-1, 80)
             test_targets = np.zeros(len(test)).reshape(-1, 80)
         else:
+            if self.cfg.training.debug:
+                train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'), nrows=196000)
+                test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'), nrows=80000)
+            else:
+                train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
+                test = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'test.csv'))
+
+            gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds).split(train, train.pressure, groups=train.breath_id)
+            for fold, (_, valid_idx) in enumerate(gkf):
+                train.loc[valid_idx, 'fold'] = fold
 
             train_targets = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
             valid_targets = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
@@ -1909,13 +1903,15 @@ class VentilatorDataModule(pl.LightningDataModule):
             else:
                 raise ValueError
 
-            train.to_feather(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.feather'))
-            test.to_feather(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.feather'))
+            train.to_csv(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.csv'), index=False)
+            test.to_csv(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.csv'), index=False)
 
-        if 'pressure' in train.columns:
-            train.drop('pressure', axis=1, inplace=True)
-        if 'pressure' in test.columns:
-            test.drop('pressure', axis=1, inplace=True)
+        for col in ['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+                   'breath_id_lag2same', 'pressure']:
+            if col in train.columns:
+                train.drop(col, axis=1, inplace=True)
+            if col in test.columns:
+                test.drop(col, axis=1, inplace=True)
 
         print('n_folds', train['fold'].nunique())
         print('train.columns', train.columns)
