@@ -1476,11 +1476,11 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
         data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
 
-        data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
-                   'breath_id_lag2same'], axis=1, inplace=True)
-
-        if 'pressure' in data.columns:
-            data.drop('pressure', axis=1, inplace=True)
+        # data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+        #            'breath_id_lag2same'], axis=1, inplace=True)
+        #
+        # if 'pressure' in data.columns:
+        #     data.drop('pressure', axis=1, inplace=True)
 
         return data.fillna(0)
 
