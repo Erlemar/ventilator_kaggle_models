@@ -27,6 +27,7 @@ def run(cfg: DictConfig) -> None:
         cfg: hydra config
 
     """
+    print('Starting')
     set_seed(cfg.training.seed)
     run_name = os.path.basename(os.getcwd())
     cfg.callbacks.model_checkpoint.params.dirpath = Path(
@@ -53,13 +54,16 @@ def run(cfg: DictConfig) -> None:
     callbacks.append(EarlyStopping(**cfg.callbacks.early_stopping.params))
     callbacks.append(ModelCheckpoint(**cfg.callbacks.model_checkpoint.params))
 
+    print('Init Trainer')
     trainer = pl.Trainer(
         logger=loggers,
         callbacks=callbacks,
         **cfg.trainer,
     )
 
+    print('Init model class')
     model = load_obj(cfg.training.lightning_module_name)(cfg=cfg)
+    print('Init dm class')
     dm = load_obj(cfg.datamodule.data_module_name)(cfg=cfg)
     trainer.fit(model, dm)
 
@@ -128,4 +132,5 @@ def run_model(cfg: DictConfig) -> None:
 
 
 if __name__ == '__main__':
+    print('Begin process')
     run_model()

@@ -1825,6 +1825,669 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         return data.fillna(0)
 
+    def make_features13(self, data):
+        """
+        huge. based on 3, 8, 10
+        Args:
+            data:
+
+        Returns:
+
+        """
+        data['area'] = data['time_step'] * data['u_in']
+        data['area'] = data.groupby('breath_id')['area'].cumsum()
+
+        data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
+
+        data['u_in_lag1'] = data.groupby('breath_id')['u_in'].shift(1)
+        data['u_out_lag1'] = data.groupby('breath_id')['u_out'].shift(1)
+        data['u_in_lag_back1'] = data.groupby('breath_id')['u_in'].shift(-1)
+        data['u_out_lag_back1'] = data.groupby('breath_id')['u_out'].shift(-1)
+        data['u_in_lag2'] = data.groupby('breath_id')['u_in'].shift(2)
+        data['u_out_lag2'] = data.groupby('breath_id')['u_out'].shift(2)
+        data['u_in_lag_back2'] = data.groupby('breath_id')['u_in'].shift(-2)
+        data['u_out_lag_back2'] = data.groupby('breath_id')['u_out'].shift(-2)
+        data['u_in_lag3'] = data.groupby('breath_id')['u_in'].shift(3)
+        data['u_out_lag3'] = data.groupby('breath_id')['u_out'].shift(3)
+        data['u_in_lag_back3'] = data.groupby('breath_id')['u_in'].shift(-3)
+        data['u_out_lag_back3'] = data.groupby('breath_id')['u_out'].shift(-3)
+        data['u_in_lag4'] = data.groupby('breath_id')['u_in'].shift(4)
+        data['u_out_lag4'] = data.groupby('breath_id')['u_out'].shift(4)
+        data['u_in_lag_back4'] = data.groupby('breath_id')['u_in'].shift(-4)
+        data['u_out_lag_back4'] = data.groupby('breath_id')['u_out'].shift(-4)
+        data = data.fillna(0)
+
+        data['breath_id__u_in__max'] = data.groupby(['breath_id'])['u_in'].transform('max')
+        data['breath_id__u_out__max'] = data.groupby(['breath_id'])['u_out'].transform('max')
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+        data['u_in_diff3'] = data['u_in'] - data['u_in_lag3']
+        data['u_out_diff3'] = data['u_out'] - data['u_out_lag3']
+        data['u_in_diff4'] = data['u_in'] - data['u_in_lag4']
+        data['u_out_diff4'] = data['u_out'] - data['u_out_lag4']
+        data['cross'] = data['u_in'] * data['u_out']
+        data['cross2'] = data['time_step'] * data['u_out']
+
+        data['one'] = 1
+        data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
+        data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
+
+        data['breath_id_lag'] = data['breath_id'].shift(1).fillna(0)
+        data['breath_id_lag2'] = data['breath_id'].shift(2).fillna(0)
+        data['breath_id_lagsame'] = np.select([data['breath_id_lag'] == data['breath_id']], [1], 0)
+        data['breath_id_lag2same'] = np.select([data['breath_id_lag2'] == data['breath_id']], [1], 0)
+        data['breath_id__u_in_lag'] = data['u_in'].shift(1).fillna(0)
+        data['breath_id__u_in_lag'] = data['breath_id__u_in_lag'] * data['breath_id_lagsame']
+        data['breath_id__u_in_lag2'] = data['u_in'].shift(2).fillna(0)
+        data['breath_id__u_in_lag2'] = data['breath_id__u_in_lag2'] * data['breath_id_lag2same']
+
+        data['R_sum_c'] = (data['R'] + data['C']).astype(str)
+        data['R_mult_c'] = (data['R'] * data['C']).astype(str)
+        data['R'] = data['R'].astype(str)
+        data['C'] = data['C'].astype(str)
+        data['R__C'] = data["R"].astype(str) + '__' + data["C"].astype(str)
+        data = pd.get_dummies(data)
+
+        data[["15_in_sum", "15_in_min", "15_in_max", "15_in_mean"]] = (data \
+                                                                       .groupby('breath_id')['u_in'] \
+                                                                       .rolling(window=15, min_periods=1) \
+                                                                       .agg({"15_in_sum": "sum",
+                                                                             "15_in_min": "min",
+                                                                             "15_in_max": "max",
+                                                                             "15_in_mean": "mean"
+                                                                             # "15_in_std":"std"
+                                                                             }) \
+                                                                       .reset_index(level=0, drop=True))
+        data['u_in_lagback_diff1'] = data['u_in'] - data['u_in_lag_back1']
+        data['u_out_lagback_diff1'] = data['u_out'] - data['u_out_lag_back1']
+        data['u_in_lagback_diff2'] = data['u_in'] - data['u_in_lag_back2']
+        data['u_out_lagback_diff2'] = data['u_out'] - data['u_out_lag_back2']
+
+        data['ewm_u_in_mean'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).mean().reset_index(level=0,
+                                                                                                      drop=True)
+
+        data['ewm_u_in_std'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).std().reset_index(level=0, drop=True)
+        data['ewm_u_in_corr'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).corr().reset_index(level=0,
+                                                                                                      drop=True)
+
+        data['rolling_10_mean'] = data.groupby('breath_id')['u_in'].rolling(window=10,
+                                                                            min_periods=1).mean().reset_index(
+            level=0, drop=True)
+        data['rolling_10_max'] = data.groupby('breath_id')['u_in'].rolling(window=10, min_periods=1).max().reset_index(
+            level=0,
+            drop=True)
+        data['rolling_10_std'] = data.groupby('breath_id')['u_in'].rolling(window=10, min_periods=1).std().reset_index(
+            level=0,
+            drop=True)
+
+        data['expand_mean'] = data.groupby('breath_id')['u_in'].expanding(2).mean().reset_index(level=0, drop=True)
+        data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
+        data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
+
+        data["u_in_rolling_mean2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).mean()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_mean4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).mean()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_mean10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).mean()[
+            "u_in"].reset_index(drop=True)
+
+        data["u_in_rolling_max2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).max()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_max4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).max()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_max10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).max()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_min2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).min()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_min4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).min()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_min10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).min()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_std2"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(2).std()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_std4"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(4).std()[
+            "u_in"].reset_index(drop=True)
+        data["u_in_rolling_std10"] = data[["breath_id", "u_in"]].groupby("breath_id").rolling(10).std()[
+            "u_in"].reset_index(drop=True)
+
+        g = data.groupby('breath_id')['u_in']
+        data['ewm_u_in_mean'] = g.ewm(halflife=10).mean() \
+            .reset_index(level=0, drop=True)
+        data['ewm_u_in_std'] = g.ewm(halflife=10).std() \
+            .reset_index(level=0, drop=True)
+        data['ewm_u_in_corr'] = g.ewm(halflife=10).corr() \
+            .reset_index(level=0, drop=True)
+
+        data['rolling_10_mean'] = g.rolling(window=10, min_periods=1).mean() \
+            .reset_index(level=0, drop=True)
+        data['rolling_10_max'] = g.rolling(window=10, min_periods=1).max() \
+            .reset_index(level=0, drop=True)
+        data['rolling_10_std'] = g.rolling(window=10, min_periods=1).std() \
+            .reset_index(level=0, drop=True)
+
+        data['expand_mean'] = g.expanding(2).mean() \
+            .reset_index(level=0, drop=True)
+        data['expand_max'] = g.expanding(2).max() \
+            .reset_index(level=0, drop=True)
+        data['expand_std'] = g.expanding(2).std() \
+            .reset_index(level=0, drop=True)
+
+        data['u_in_lag_back10'] = data.groupby('breath_id')['u_in'].shift(-10)
+        data['u_out_lag_back10'] = data.groupby('breath_id')['u_out'].shift(-10)
+
+        data['time_step_diff'] = data.groupby('breath_id')['time_step'].diff().fillna(0)
+        ### rolling window ts feats
+        data['ewm_u_in_mean'] = data.groupby('breath_id')['u_in'].ewm(halflife=9).mean().reset_index(level=0,
+                                                                                                     drop=True)
+        data['ewm_u_in_std'] = data.groupby('breath_id')['u_in'].ewm(halflife=10).std().reset_index(level=0,
+                                                                                                    drop=True)  ## could add covar?
+        data['ewm_u_in_corr'] = data.groupby('breath_id')['u_in'].ewm(halflife=15).corr().reset_index(level=0,
+                                                                                                      drop=True)  # self umin corr
+        # data['ewm_u_in_corr'] = data.groupby('breath_id')['u_in'].ewm(halflife=6).corr(data.groupby('breath_id')["u_out"]).reset_index(level=0,drop=True) # corr with u_out # error
+        ## rolling window of 15 periods
+        data[["15_in_sum", "15_in_min", "15_in_max", "15_in_mean", "15_out_std"]] = data.groupby('breath_id')[
+            'u_in'].rolling(window=15, min_periods=1).agg(
+            {"15_in_sum": "sum", "15_in_min": "min", "15_in_max": "max", "15_in_mean": "mean",
+             "15_in_std": "std"}).reset_index(level=0, drop=True)
+        #     data[["45_in_sum","45_in_min","45_in_max","45_in_mean","45_out_std"]] = data.groupby('breath_id')['u_in'].rolling(window=45,min_periods=1).agg({"45_in_sum":"sum","45_in_min":"min","45_in_max":"max","45_in_mean":"mean","45_in_std":"std"}).reset_index(level=0,drop=True)
+        data[["45_in_sum", "45_in_min", "45_in_max", "45_in_mean", "45_out_std"]] = data.groupby('breath_id')[
+            'u_in'].rolling(window=45, min_periods=1).agg(
+            {"45_in_sum": "sum", "45_in_min": "min", "45_in_max": "max", "45_in_mean": "mean",
+             "45_in_std": "std"}).reset_index(level=0, drop=True)
+
+        data[["15_out_mean"]] = data.groupby('breath_id')['u_out'].rolling(window=15, min_periods=1).agg(
+            {"15_out_mean": "mean"}).reset_index(level=0, drop=True)
+
+        data['u_in_lagback_diff1'] = data['u_in'] - data['u_in_lag_back1']
+        data['u_out_lagback_diff1'] = data['u_out'] - data['u_out_lag_back1']
+        data['u_in_lagback_diff2'] = data['u_in'] - data['u_in_lag_back2']
+        data['u_out_lagback_diff2'] = data['u_out'] - data['u_out_lag_back2']
+        data['u_in_lagback_diff3'] = data['u_in'] - data['u_in_lag_back3']
+        data['u_out_lagback_diff3'] = data['u_out'] - data['u_out_lag_back3']
+        data['u_in_lagback_diff4'] = data['u_in'] - data['u_in_lag_back4']
+        data['u_out_lagback_diff4'] = data['u_out'] - data['u_out_lag_back4']
+
+        ######
+        data['u_in_lag_back10'] = data.groupby('breath_id')['u_in'].shift(-10)
+        data['u_out_lag_back10'] = data.groupby('breath_id')['u_out'].shift(-10)
+        data['u_in_lagback_diff10'] = data['u_in'] - data['u_in_lag_back10']
+        data['u_out_lagback_diff10'] = data['u_out'] - data['u_out_lag_back10']
+
+        data['time_step_diff'] = data['time_step'] - data.groupby('breath_id')['time_step'].shift().fillna(0)
+
+        data[["15_out_sum", "15_out_min", "15_out_max", "15_out_mean", "15_out_std"]] = (data \
+                                                                       .groupby('breath_id')['u_out'] \
+                                                                       .rolling(window=15, min_periods=1) \
+                                                                       .agg({"15_out_sum": "sum",
+                                                                             "15_out_min": "min",
+                                                                             "15_out_max": "max",
+                                                                             "15_out_mean": "mean",
+                                                                             "15_out_std": "std"
+                                                                             }).reset_index(level=0, drop=True))
+
+        for window in [2, 4, 5, 10, 15, 20, 30, 45]:
+            data[[f"{window}_in_sum", f"{window}_in_min", f"{window}_in_max",
+                  f"{window}_in_mean", f"{window}_in_std"]] = (data.groupby('breath_id')['u_in'].rolling(window=window,
+                                                                                                         min_periods=1) \
+                                                                                        .agg({f"{window}_in_sum": "sum",
+                                                                                              f"{window}_in_min": "min",
+                                                                                              f"{window}_in_max": "max",
+                                                                                              f"{window}_in_mean": "mean",
+                                                                                              f"{window}_in_std": "std"
+                                                                                              }).reset_index(level=0,
+                                                                                                             drop=True))
+
+        for halflife in [5, 9, 10, 15, 20]:
+
+            data[f'ewm_u_in_mean_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).mean().reset_index(level=0,
+                                                                                                          drop=True)
+
+            data[f'ewm_u_in_std_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).std().reset_index(level=0, drop=True)
+            data[f'ewm_u_in_corr_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).corr().reset_index(level=0,
+                                                                                                          drop=True)
+
+
+        data['expand_mean'] = data.groupby('breath_id')['u_in'].expanding(2).mean().reset_index(level=0, drop=True)
+        data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
+        data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
+
+        data['time_step_diff'] = data['time_step'] - data.groupby('breath_id')['time_step'].shift().fillna(0)
+
+        # data[["15_out_sum", "15_out_min", "15_out_max", "15_out_mean", "15_out_std"]] = (data \
+        #                                                                .groupby('breath_id')['u_out'] \
+        #                                                                .rolling(window=15, min_periods=1) \
+        #                                                                .agg({"15_out_sum": "sum",
+        #                                                                      "15_out_min": "min",
+        #                                                                      "15_out_max": "max",
+        #                                                                      "15_out_mean": "mean",
+        #                                                                      "15_out_std": "std"
+        #                                                                      }).reset_index(level=0, drop=True))
+
+        for window in [2, 3, 4, 5, 7, 10, 15, 20, 30, 40, 45]:
+            data[[f"{window}_in_sum", f"{window}_in_min", f"{window}_in_max",
+                  f"{window}_in_mean", f"{window}_in_std"]] = (data.groupby('breath_id')['u_in'].rolling(window=window,
+                                                                                                         min_periods=1) \
+                                                               .agg({f"{window}_in_sum": "sum",
+                                                                     f"{window}_in_min": "min",
+                                                                     f"{window}_in_max": "max",
+                                                                     f"{window}_in_mean": "mean",
+                                                                     f"{window}_in_std": "std"
+                                                                     }).reset_index(level=0,
+                                                                                    drop=True))
+
+            data[[f"{window}_out_sum", f"{window}_out_min", f"{window}_out_max",
+                  f"{window}_out_mean", f"{window}_out_std"]] = (
+                data.groupby('breath_id')['u_out'].rolling(window=window,
+                                                           min_periods=1) \
+                .agg({f"{window}_out_sum": "sum",
+                      f"{window}_out_min": "min",
+                      f"{window}_out_max": "max",
+                      f"{window}_out_mean": "mean",
+                      f"{window}_out_std": "std"
+                      }).reset_index(level=0,
+                                     drop=True))
+
+        for halflife in [2, 3, 4, 5, 7, 10, 15, 20, 30, 40, 45]:
+            data[f'ewm_u_in_mean_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(
+                halflife=halflife).mean().reset_index(level=0,
+                                                      drop=True)
+
+            data[f'ewm_u_in_std_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(
+                halflife=halflife).std().reset_index(level=0, drop=True)
+            data[f'ewm_u_in_corr_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(
+                halflife=halflife).corr().reset_index(level=0,
+                                                      drop=True)
+
+        data['expand_mean'] = data.groupby('breath_id')['u_in'].expanding(2).mean().reset_index(level=0, drop=True)
+        data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
+        data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
+
+        best_cols = ['10_in_max',
+ '10_in_mean',
+ '10_in_mean',
+ '10_in_min',
+ '10_in_min',
+ '10_in_std',
+ '10_in_std',
+ '10_in_sum',
+ '10_in_sum',
+ '10_out_std',
+ '15_in_max',
+ '15_in_max',
+ '15_in_mean',
+ '15_in_mean',
+ '15_in_mean',
+ '15_in_min',
+ '15_in_min',
+ '15_in_min',
+ '15_in_std',
+ '15_in_sum',
+ '15_in_sum',
+ '15_in_sum',
+ '15_out_max',
+ '15_out_mean',
+ '15_out_std',
+ '15_out_std',
+ '15_out_std',
+ '20_in_max',
+ '20_in_mean',
+ '20_in_mean',
+ '20_in_min',
+ '20_in_min',
+ '20_in_std',
+ '20_in_sum',
+ '20_in_sum',
+ '20_out_std',
+ '2_in_max',
+ '2_in_max',
+ '2_in_mean',
+ '2_in_mean',
+ '2_in_min',
+ '2_in_min',
+ '2_in_std',
+ '2_in_std',
+ '2_in_sum',
+ '2_in_sum',
+ '30_in_max',
+ '30_in_mean',
+ '30_in_mean',
+ '30_in_min',
+ '30_in_min',
+ '30_in_std',
+ '30_in_sum',
+ '30_in_sum',
+ '3_in_max',
+ '3_in_mean',
+ '3_in_min',
+ '3_in_std',
+ '3_in_sum',
+ '3_out_std',
+ '40_in_mean',
+ '40_in_min',
+ '40_in_sum',
+ '45_in_max',
+ '45_in_max',
+ '45_in_mean',
+ '45_in_mean',
+ '45_in_mean',
+ '45_in_min',
+ '45_in_min',
+ '45_in_min',
+ '45_in_std',
+ '45_in_sum',
+ '45_in_sum',
+ '45_in_sum',
+ '45_out_std',
+ '4_in_max',
+ '4_in_max',
+ '4_in_mean',
+ '4_in_mean',
+ '4_in_min',
+ '4_in_min',
+ '4_in_std',
+ '4_in_std',
+ '4_in_sum',
+ '4_in_sum',
+ '4_out_std',
+ '5_in_max',
+ '5_in_max',
+ '5_in_mean',
+ '5_in_mean',
+ '5_in_min',
+ '5_in_min',
+ '5_in_std',
+ '5_in_std',
+ '5_in_sum',
+ '5_in_sum',
+ '7_in_max',
+ '7_in_mean',
+ '7_in_min',
+ '7_in_std',
+ '7_in_sum',
+ '7_out_std',
+ 'C_10',
+ 'C_10',
+ 'C_10',
+ 'C_20',
+ 'C_20',
+ 'C_50',
+ 'C_50',
+ 'C_50',
+ 'C_cate',
+ 'C_cate',
+ 'RC_dot',
+ 'RC_dot',
+ 'RC_sum',
+ 'RC_sum',
+ 'R_20',
+ 'R_20',
+ 'R_5',
+ 'R_5',
+ 'R_50',
+ 'R_50',
+ 'R__C_20__10',
+ 'R__C_20__10',
+ 'R__C_20__20',
+ 'R__C_20__20',
+ 'R__C_20__50',
+ 'R__C_20__50',
+ 'R__C_20__50',
+ 'R__C_50__10',
+ 'R__C_50__10',
+ 'R__C_50__10',
+ 'R__C_50__20',
+ 'R__C_50__20',
+ 'R__C_50__50',
+ 'R__C_50__50',
+ 'R__C_5__10',
+ 'R__C_5__10',
+ 'R__C_5__20',
+ 'R__C_5__20',
+ 'R__C_5__50',
+ 'R__C_5__50',
+ 'R__C_5__50',
+ 'R_cate',
+ 'R_cate',
+ 'R_mult_c_100',
+ 'R_mult_c_100',
+ 'R_mult_c_1000',
+ 'R_mult_c_1000',
+ 'R_mult_c_200',
+ 'R_mult_c_200',
+ 'R_mult_c_250',
+ 'R_mult_c_250',
+ 'R_mult_c_250',
+ 'R_mult_c_2500',
+ 'R_mult_c_2500',
+ 'R_mult_c_400',
+ 'R_mult_c_400',
+ 'R_mult_c_50',
+ 'R_mult_c_50',
+ 'R_mult_c_500',
+ 'R_mult_c_500',
+ 'R_mult_c_500',
+ 'R_sum_c_100',
+ 'R_sum_c_100',
+ 'R_sum_c_15',
+ 'R_sum_c_15',
+ 'R_sum_c_25',
+ 'R_sum_c_25',
+ 'R_sum_c_30',
+ 'R_sum_c_30',
+ 'R_sum_c_40',
+ 'R_sum_c_40',
+ 'R_sum_c_55',
+ 'R_sum_c_55',
+ 'R_sum_c_55',
+ 'R_sum_c_60',
+ 'R_sum_c_60',
+ 'R_sum_c_60',
+ 'R_sum_c_70',
+ 'R_sum_c_70',
+ 'area',
+ 'area',
+ 'area',
+ 'breath_id__u_in__diffmax',
+ 'breath_id__u_in__diffmax',
+ 'breath_id__u_in__diffmean',
+ 'breath_id__u_in__diffmean',
+ 'breath_id__u_in__diffmean',
+ 'breath_id__u_in__max',
+ 'breath_id__u_in__max',
+ 'breath_id__u_in_lag',
+ 'breath_id__u_in_lag',
+ 'breath_id__u_in_lag',
+ 'breath_id__u_in_lag2',
+ 'breath_id__u_in_lag2',
+ 'breath_id__u_in_lag2',
+ 'cross',
+ 'cross',
+ 'cross2',
+ 'ewm_u_in_corr',
+ 'ewm_u_in_corr_15',
+ 'ewm_u_in_corr_20',
+ 'ewm_u_in_corr_5',
+ 'ewm_u_in_corr_9',
+ 'ewm_u_in_mean',
+ 'ewm_u_in_mean_10',
+ 'ewm_u_in_mean_10',
+ 'ewm_u_in_mean_15',
+ 'ewm_u_in_mean_15',
+ 'ewm_u_in_mean_2',
+ 'ewm_u_in_mean_20',
+ 'ewm_u_in_mean_20',
+ 'ewm_u_in_mean_3',
+ 'ewm_u_in_mean_30',
+ 'ewm_u_in_mean_4',
+ 'ewm_u_in_mean_40',
+ 'ewm_u_in_mean_45',
+ 'ewm_u_in_mean_5',
+ 'ewm_u_in_mean_5',
+ 'ewm_u_in_mean_7',
+ 'ewm_u_in_mean_9',
+ 'ewm_u_in_std',
+ 'ewm_u_in_std_10',
+ 'ewm_u_in_std_15',
+ 'ewm_u_in_std_2',
+ 'ewm_u_in_std_20',
+ 'ewm_u_in_std_5',
+ 'ewm_u_in_std_9',
+ 'expand_max',
+ 'expand_max',
+ 'expand_mean',
+ 'expand_mean',
+ 'expand_mean',
+ 'expand_std',
+ 'expand_std',
+ 'rolling_10_max',
+ 'rolling_10_mean',
+ 'rolling_10_std',
+ 'time_step',
+ 'time_step',
+ 'time_step_diff',
+ 'time_step_diff',
+ 'time_step_diff',
+ 'u_in',
+ 'u_in',
+ 'u_in',
+ 'u_in_cummean',
+ 'u_in_cummean',
+ 'u_in_cummean',
+ 'u_in_cumsum',
+ 'u_in_cumsum',
+ 'u_in_cumsum',
+ 'u_in_diff-1',
+ 'u_in_diff-10',
+ 'u_in_diff-2',
+ 'u_in_diff-3',
+ 'u_in_diff-4',
+ 'u_in_diff-5',
+ 'u_in_diff-6',
+ 'u_in_diff-7',
+ 'u_in_diff-8',
+ 'u_in_diff-9',
+ 'u_in_diff1',
+ 'u_in_diff1',
+ 'u_in_diff1',
+ 'u_in_diff10',
+ 'u_in_diff2',
+ 'u_in_diff2',
+ 'u_in_diff2',
+ 'u_in_diff3',
+ 'u_in_diff3',
+ 'u_in_diff3',
+ 'u_in_diff4',
+ 'u_in_diff4',
+ 'u_in_diff4',
+ 'u_in_diff5',
+ 'u_in_diff6',
+ 'u_in_diff7',
+ 'u_in_diff8',
+ 'u_in_diff9',
+ 'u_in_lag-1',
+ 'u_in_lag-10',
+ 'u_in_lag-2',
+ 'u_in_lag-3',
+ 'u_in_lag-4',
+ 'u_in_lag-5',
+ 'u_in_lag-6',
+ 'u_in_lag-7',
+ 'u_in_lag-8',
+ 'u_in_lag-9',
+ 'u_in_lag1',
+ 'u_in_lag1',
+ 'u_in_lag1',
+ 'u_in_lag10',
+ 'u_in_lag2',
+ 'u_in_lag2',
+ 'u_in_lag2',
+ 'u_in_lag3',
+ 'u_in_lag3',
+ 'u_in_lag3',
+ 'u_in_lag4',
+ 'u_in_lag4',
+ 'u_in_lag4',
+ 'u_in_lag5',
+ 'u_in_lag6',
+ 'u_in_lag7',
+ 'u_in_lag8',
+ 'u_in_lag9',
+ 'u_in_lag_back1',
+ 'u_in_lag_back1',
+ 'u_in_lag_back10',
+ 'u_in_lag_back10',
+ 'u_in_lag_back2',
+ 'u_in_lag_back2',
+ 'u_in_lag_back3',
+ 'u_in_lag_back3',
+ 'u_in_lag_back4',
+ 'u_in_lag_back4',
+ 'u_in_lagback_diff1',
+ 'u_in_lagback_diff1',
+ 'u_in_lagback_diff10',
+ 'u_in_lagback_diff2',
+ 'u_in_lagback_diff2',
+ 'u_in_lagback_diff3',
+ 'u_in_lagback_diff4',
+ 'u_in_rolling_max10',
+ 'u_in_rolling_max2',
+ 'u_in_rolling_max4',
+ 'u_in_rolling_mean10',
+ 'u_in_rolling_mean2',
+ 'u_in_rolling_mean4',
+ 'u_in_rolling_min10',
+ 'u_in_rolling_min2',
+ 'u_in_rolling_min4',
+ 'u_in_rolling_std10',
+ 'u_in_rolling_std2',
+ 'u_in_rolling_std4',
+ 'u_out',
+ 'u_out',
+ 'u_out_diff1',
+ 'u_out_diff2',
+ 'u_out_diff3',
+ 'u_out_diff3',
+ 'u_out_diff4',
+ 'u_out_diff4',
+ 'u_out_lag1',
+ 'u_out_lag2',
+ 'u_out_lag3',
+ 'u_out_lag4',
+ 'u_out_lag_back1',
+ 'u_out_lag_back10',
+ 'u_out_lag_back10',
+ 'u_out_lag_back2',
+ 'u_out_lag_back3',
+ 'u_out_lag_back3',
+ 'u_out_lag_back4',
+ 'u_out_lag_back4',
+ 'u_out_lagback_diff1',
+ 'u_out_lagback_diff1',
+ 'u_out_lagback_diff10',
+ 'u_out_lagback_diff2',
+ 'u_out_lagback_diff2',
+ 'u_out_lagback_diff3',
+ 'u_out_lagback_diff4'] + ['fold'] + ['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+                   'breath_id_lag2same', 'pressure']
+        best_cols = [col for col in best_cols if col in data.columns]
+        data = data[best_cols]
+
+        return data.fillna(0)
+
     def setup(self, stage=None):
 
         if os.path.exists(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.csv')):
@@ -1900,6 +2563,9 @@ class VentilatorDataModule(pl.LightningDataModule):
             elif self.cfg.datamodule.make_features_style == 12:
                 train = self.make_features12(train)
                 test = self.make_features12(test)
+            elif self.cfg.datamodule.make_features_style == 13:
+                train = self.make_features13(train)
+                test = self.make_features13(test)
             else:
                 raise ValueError
 
@@ -1916,26 +2582,115 @@ class VentilatorDataModule(pl.LightningDataModule):
         print('n_folds', train['fold'].nunique())
         print('train.columns', train.columns)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
-
-        top_columns = ['u_in_lagback_diff2', 'u_in_diff1', 'u_in_diff4', 'u_in_diff2',
-       'u_in_rolling_mean2', 'u_in', 'u_in_diff3', 'breath_id__u_in_lag',
-       'u_in_rolling_min4', 'u_in_rolling_std10', 'rolling_10_std',
-       'u_in_rolling_max10', 'u_in_rolling_min2', 'u_in_lag_back3',
-       '15_in_max', 'ewm_u_in_mean', 'ewm_u_in_std',
-       'breath_id__u_in__diffmax', 'u_in_rolling_max4', 'u_in_cummean',
-       '45_in_max', '45_in_min', 'area', 'R_50', 'C_10', 'R_sum_c_100',
-       'R__C_50__50', 'R__C_5__10', 'R_sum_c_30', 'R_sum_c_55',
-       'time_step_diff', 'R_sum_c_40', 'R_20', 'R_mult_c_2500',
-       'R_mult_c_50', 'C_20', 'C_50', 'R_mult_c_1000', 'u_out_lag2',
-       'R_mult_c_400', 'R__C_50__20', 'R__C_20__10', 'u_in_rolling_mean4',
-       'R_mult_c_250', 'R__C_20__50', 'u_out_lagback_diff1',
-       'u_out_diff1', 'time_step', '15_out_mean', 'u_out_lag_back4',
-       'u_out_lag_back1', 'u_out_lag3', 'cross2', 'R__C_5__20',
-       'u_out_lag_back10']
+        # 103
+        top_columns_3 = ['u_in_diff1', 'u_in_lagback_diff1', 'u_in_diff2',
+       'u_in_lagback_diff2', 'u_in_diff3', '45_in_sum', 'u_in_diff4',
+       'time_step_diff', 'u_in_cumsum', 'ewm_u_in_mean', 'expand_mean',
+       'u_in_cummean', '15_in_sum', '45_in_mean', 'u_in_rolling_mean10',
+       'u_in_rolling_std2', '45_in_min', 'u_in', 'u_in_rolling_mean4',
+       'u_in_rolling_max2', 'u_in_rolling_max10', 'u_in_rolling_mean2',
+       'u_in_rolling_max4', 'breath_id__u_in_lag2', 'u_in_lag3',
+       'u_in_rolling_min4', 'u_in_rolling_min2', 'breath_id__u_in_lag',
+       'u_in_rolling_std4', 'u_in_lag_back1', 'u_in_lag1', '15_in_mean',
+       'u_in_lag_back2', 'u_in_lag4', 'u_in_lag2', 'rolling_10_mean',
+       'u_in_rolling_std10', 'u_in_rolling_min10', 'u_in_lag_back3',
+       'C_50', 'area', 'u_in_lag_back4', '15_in_min',
+       'breath_id__u_in__diffmean', 'R__C_20__50', 'R_sum_c_55',
+       'R__C_5__50', 'R_mult_c_250', 'C_10', 'rolling_10_std',
+       'u_in_lag_back10', 'ewm_u_in_std', '15_out_std', 'rolling_10_max',
+       '15_in_max', '45_in_max', 'expand_max', '45_out_std',
+       'R__C_50__10', 'R_mult_c_1000', 'R_mult_c_500', 'R_sum_c_70',
+       'R_sum_c_60', 'R_sum_c_100', 'R_mult_c_2500', 'R_5', 'expand_std',
+       'R__C_5__10', 'R__C_50__50', 'breath_id__u_in__max', 'R_50',
+       'R_sum_c_15', 'R_mult_c_50', 'C_20', 'R__C_5__20',
+       'breath_id__u_in__diffmax', 'R_mult_c_200', 'R_mult_c_100',
+       'R__C_20__20', 'R_20', 'R__C_20__10', 'R_sum_c_40', 'R_sum_c_30',
+       'R__C_50__20', 'R_sum_c_25', 'R_mult_c_400', 'cross',
+       'ewm_u_in_corr', 'u_out_diff3', 'u_out', 'u_out_diff2',
+       'u_out_diff4', 'u_out_lagback_diff2', 'u_out_lag_back2',
+       'u_out_lag_back4', 'u_out_lag2', 'u_out_lag_back3',
+       'u_out_lag_back10', 'time_step', 'u_out_lagback_diff1',
+       '15_out_mean', 'u_out_lag4', 'u_out_diff1']
+        # 139
+        top_columns_8 = ['u_in_diff1', 'u_in_lagback_diff1', 'u_in_diff2',
+       'u_in_lagback_diff2', 'u_in_diff3', 'time_step_diff', 'u_in_diff4',
+       'u_in_lagback_diff3', 'u_in_lagback_diff10', '30_in_min',
+       '30_in_sum', '20_in_sum', '2_in_std', '2_in_mean',
+       'u_in_lagback_diff4', '2_in_sum', 'u_in', '15_out_std', '4_in_sum',
+       'ewm_u_in_mean_20', 'ewm_u_in_mean_9', '45_in_sum', '2_in_max',
+       '15_in_sum', 'ewm_u_in_mean_15', 'ewm_u_in_mean_10', '2_in_min',
+       'u_in_lag_back1', '5_in_sum', 'u_in_cummean', 'ewm_u_in_mean_5',
+       '4_in_std', 'breath_id__u_in_lag', '10_in_sum', 'u_in_lag1',
+       'expand_mean', 'breath_id__u_in_lag2', '4_in_mean',
+       'u_in_lag_back3', 'u_in_lag_back2', 'u_in_lag4', 'u_in_lag2',
+       'u_in_cumsum', '30_in_mean', '5_in_mean', '45_in_mean', '4_in_min',
+       '5_in_min', '20_in_mean', '45_in_min', '5_in_std', 'u_in_lag3',
+       'u_in_lag_back4', '10_in_mean', '4_in_max', '15_in_mean', 'C_cate',
+       '10_in_min', '20_in_min', 'breath_id__u_in__diffmean', '5_in_max',
+       'u_in_lag_back10', 'C_50', '15_in_min', '10_in_std', 'C_10',
+       'RC_dot', 'RC_sum', 'R__C_20__50', '15_in_std', 'R_mult_c_250',
+       'C_20', 'R_sum_c_70', 'area', 'R__C_50__10', 'ewm_u_in_std_9',
+       'R_sum_c_60', 'R_mult_c_1000', 'ewm_u_in_std_5', 'R_mult_c_500',
+       'expand_max', '20_in_max', 'R_sum_c_55', '15_in_max', '30_in_max',
+       '30_in_std', 'R__C_5__50', '10_in_max', '20_in_std',
+       'ewm_u_in_std_20', 'ewm_u_in_std_10', 'breath_id__u_in__max',
+       'R__C_5__20', 'R_sum_c_100', 'breath_id__u_in__diffmax',
+       'ewm_u_in_std_15', 'expand_std', 'R__C_50__50', '45_in_std',
+       '45_in_max', 'R_mult_c_2500', 'R_mult_c_100', 'R_sum_c_25',
+       'R_cate', 'R__C_50__20', 'R_20', 'R_5', 'R__C_5__10',
+       'R_mult_c_200', 'R_sum_c_40', 'R__C_20__10', 'R_sum_c_30',
+       'R__C_20__20', 'R_sum_c_15', 'R_mult_c_400', 'R_mult_c_50', 'R_50',
+       'u_out_lag_back10', 'u_out_lagback_diff2', 'u_out_lagback_diff4',
+       'u_out_lag_back4', 'u_out_lagback_diff3', 'ewm_u_in_corr_20',
+       'ewm_u_in_corr_5', 'u_out_lag_back3', '15_out_max',
+       'u_out_lagback_diff1', 'u_out', 'u_out_lag_back1',
+       'ewm_u_in_corr_15', 'cross', 'u_out_lagback_diff10', 'cross2',
+       'u_out_lag1', 'u_out_diff3', 'u_out_diff4', 'time_step',
+       'ewm_u_in_corr_9', 'u_out_lag3']
+        # 124
+        top_columns_10 = ['u_in_diff1', 'u_in_diff-1', 'u_in_diff2', 'u_in_diff3',
+       'u_in_diff-2', 'u_in_diff4', 'u_in_diff-3', 'time_step_diff',
+       'u_in_diff-4', '30_in_min', 'u_in_diff-5', 'u_in_diff5',
+       'u_in_diff-6', '2_in_std', 'u_in_diff-8', 'u_in_diff-7',
+       '45_in_min', '40_in_min', '3_in_std', 'u_in_diff6', 'u_in_diff-9',
+       'u_in_diff-10', '30_in_sum', '3_out_std', '40_in_sum', '4_in_std',
+       '7_out_std', 'u_in_cumsum', '45_in_sum', 'u_in_diff7',
+       'u_in_diff8', '10_out_std', '7_in_sum', 'u_in', '4_out_std',
+       '15_out_std', '2_in_sum', '5_in_sum', '20_out_std', '2_in_mean',
+       '10_in_sum', 'ewm_u_in_mean_5', '4_in_sum', '3_in_sum',
+       'ewm_u_in_mean_45', 'u_in_lag5', 'u_in_lag6',
+       'breath_id__u_in__diffmean', '15_in_sum', '3_in_mean', '5_in_std',
+       'u_in_lag7', '20_in_sum', '3_in_min', 'expand_mean',
+       'ewm_u_in_mean_2', 'u_in_diff9', 'u_in_cummean', '2_in_min',
+       'u_in_diff10', 'u_in_lag3', 'ewm_u_in_mean_3', '4_in_mean',
+       '5_in_min', 'ewm_u_in_mean_15', 'ewm_u_in_mean_10', '7_in_min',
+       'u_in_lag8', 'breath_id__u_in_lag2', 'ewm_u_in_mean_40',
+       'u_in_lag1', 'u_in_lag-3', 'ewm_u_in_mean_7',
+       'breath_id__u_in_lag', 'ewm_u_in_mean_20', '4_in_min',
+       'u_in_lag-1', '5_in_mean', '10_in_min', '2_in_max',
+       'ewm_u_in_mean_30', 'u_in_lag2', 'ewm_u_in_mean_4', 'u_in_lag4',
+       '20_in_min', '7_in_mean', 'u_in_lag-4', 'u_in_lag9', 'C_cate',
+       '30_in_mean', 'C_50', 'u_in_lag-2', 'u_in_lag10', 'u_in_lag-6',
+       '7_in_std', '15_in_min', '3_in_max', '4_in_max', 'u_in_lag-5',
+       '40_in_mean', '45_in_mean', '20_in_mean', '15_in_mean',
+       'u_in_lag-7', '10_in_mean', 'u_in_lag-8', 'R__C_50__10',
+       'u_in_lag-10', 'ewm_u_in_std_2', '10_in_std', 'R_sum_c_60',
+       'R_mult_c_500', 'u_in_lag-9', 'R_sum_c_55', 'C_10', 'RC_dot',
+       '5_in_max', 'R__C_5__50', 'R_cate', 'R__C_20__50', 'area',
+       '7_in_max', 'R_mult_c_250', 'RC_sum']
         if self.cfg.datamodule.top_n != False:
-            top_columns = top_columns[:self.cfg.datamodule.top_n]
-            train = train[top_columns + ['fold']]
-            test = test[top_columns]
+            if self.cfg.datamodule.make_features_style == 3:
+                top_columns = top_columns_3[:self.cfg.datamodule.top_n]
+                train = train[top_columns + ['fold']]
+                test = test[top_columns]
+            if self.cfg.datamodule.make_features_style == 8:
+                top_columns = top_columns_8[:self.cfg.datamodule.top_n]
+                train = train[top_columns + ['fold']]
+                test = test[top_columns]
+            if self.cfg.datamodule.make_features_style == 10:
+                top_columns = top_columns_10[:self.cfg.datamodule.top_n]
+                train = train[top_columns + ['fold']]
+                test = test[top_columns]
 
 
         if self.cfg.datamodule.normalize:
