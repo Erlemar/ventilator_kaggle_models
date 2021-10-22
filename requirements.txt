@@ -21,3 +21,4 @@ timm==0.4.12
 torch-optimizer==0.1.0
 wandb==0.12.4
 einops==0.3.2
+pyarrow==5.0.0
