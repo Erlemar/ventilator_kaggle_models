@@ -1660,8 +1660,8 @@ class VentilatorDataModule(pl.LightningDataModule):
         Returns:
 
         """
-        # if "pressure" not in data.columns:
-        #     data['pressure'] = 0
+        if "pressure" not in data.columns:
+            data['pressure'] = 0
         # data = data.merge(
         #     data.groupby(['R', 'C', 'time_step']).pressure.std().reset_index().rename(columns={'pressure': 'p_std'}),
         #     on=['R', 'C', 'time_step'], how='left')
