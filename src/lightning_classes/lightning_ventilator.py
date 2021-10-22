@@ -24,6 +24,7 @@ class VentilatorRegression(pl.LightningModule):
                 self.metrics.update({metric.metric_name: load_obj(metric.class_name)()})
 
         print(f'{self.metrics=}')
+        self.best_ventilator_mae = torch.tensor(1000)
 
     def forward(self, x, *args, **kwargs):
         return self.model(x)
@@ -56,7 +57,7 @@ class VentilatorRegression(pl.LightningModule):
             loss = self.loss(pred, batch['p']).mean()
         else:
             loss = self.loss(pred, batch['p'], batch['u_out']).mean()
-        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=False, logger=True)
 
         for metric in self.metrics:
             if metric == 'mae':
@@ -82,6 +83,12 @@ class VentilatorRegression(pl.LightningModule):
                 score = self.metrics[metric](pred, batch['p']).mean()
             else:
                 score = self.metrics[metric](pred, batch['p'], batch['u_out']).mean()
+                if metric == 'ventilator_mae':
+                    self.best_ventilator_mae = score if score < self.best_ventilator_mae else self.best_ventilator_mae
+
+                    self.log('best_ventilator_mae', self.best_ventilator_mae, on_step=False, on_epoch=True, prog_bar=True,
+                             logger=True)
+
             self.log(f'valid_{metric}', score, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
