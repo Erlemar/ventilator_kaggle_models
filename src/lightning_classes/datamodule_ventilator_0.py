@@ -1850,6 +1850,7 @@ class VentilatorDataModule(pl.LightningDataModule):
             gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds).split(train, train.pressure, groups=train.breath_id)
             for fold, (_, valid_idx) in enumerate(gkf):
                 train.loc[valid_idx, 'fold'] = fold
+
             train_targets = train.loc[train['fold'] != self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
             valid_targets = train.loc[train['fold'] == self.cfg.datamodule.fold_n, 'pressure'].copy().values.reshape(-1, 80)
 
@@ -1916,6 +1917,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         if 'pressure' in test.columns:
             test.drop('pressure', axis=1, inplace=True)
 
+        print('n_folds', train['fold'].nunique())
         print('train.columns', train.columns)
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
 
