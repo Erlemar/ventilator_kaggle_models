@@ -1660,15 +1660,15 @@ class VentilatorDataModule(pl.LightningDataModule):
         Returns:
 
         """
-        if "pressure" not in data.columns:
-            data['pressure'] = 0
-        data = data.merge(
-            data.groupby(['R', 'C', 'time_step']).pressure.std().reset_index().rename(columns={'pressure': 'p_std'}),
-            on=['R', 'C', 'time_step'], how='left')
-        data = data.merge(data.groupby(['R', 'C', 'time_step']).pressure.median().reset_index().rename(
-            columns={'pressure': 'p_mean'}), on=['R', 'C', 'time_step'], how='left')
-        data.sort_values(by='id', inplace=True)
-        data.reset_index(drop=True, inplace=True)
+        # if "pressure" not in data.columns:
+        #     data['pressure'] = 0
+        # data = data.merge(
+        #     data.groupby(['R', 'C', 'time_step']).pressure.std().reset_index().rename(columns={'pressure': 'p_std'}),
+        #     on=['R', 'C', 'time_step'], how='left')
+        # data = data.merge(data.groupby(['R', 'C', 'time_step']).pressure.median().reset_index().rename(
+        #     columns={'pressure': 'p_mean'}), on=['R', 'C', 'time_step'], how='left')
+        # data.sort_values(by='id', inplace=True)
+        # data.reset_index(drop=True, inplace=True)
 
         tmp = data.to_numpy().reshape(-1, 80, data.shape[-1])
         tmp = tmp[:, :35, :]
