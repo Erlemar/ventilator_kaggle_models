@@ -250,17 +250,52 @@ ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 ge
 0.1569
 ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=108 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=3 datamodule.n_folds=30 datamodule.fold_n=0
 =====
-feature selection
 
-SAVE FEATURES
 
-    df['time_gap'] = df['time_step'] - df.shift(1).fillna(0)['time_step']
-    df['u_in_gap'] = df['u_in'] - df.shift(1).fillna(0)['u_in']
-    df['u_in_rate'] = df['u_in_gap'] / df['time_gap']
+1
+model.class_name=src.models.ventilator_model__0_0.VentilatorNet
 
-    df.loc[list(range(0, len(df), 80)), 'time_gap'] = 0
-    df.loc[list(range(0, len(df), 80)), 'u_in_gap'] = 0
-    df.loc[list(range(0, len(df), 80)), 'u_in_rate'] = 0
-    
-    df['area'] = df['u_in'] * df['time_gap']
-    df['area_cumsum'] = (df['area']).groupby(df['breath_id']).cum
+2
+
+model.class_name=src.models.ventilator_model__0_1.VentilatorNet
+
+3
+model.class_name=src.models.ventilator_model__0_2.VentilatorNet
+
+4
+feature_style 14
+feats 151
+
+5
+trainer.gradient_clip_val=10000
+trainer.gradient_clip_val=100
+
+6
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.nhead=149 model.params.transformer_num_layers=1 model.params.use_transformer_encoder=True trainer.gpus=1 trainer.max_epochs=4 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.fold_n=0
+
+7
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.nhead=149 model.params.transformer_num_layers=1 model.params.use_transformer=True trainer.gpus=1 trainer.max_epochs=4 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.fold_n=0
+
+8
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.nhead=149 model.params.transformer_num_layers=1 model.params.use_transformer=True model.params.use_transformer_encoder=True  trainer.gpus=1 trainer.max_epochs=4 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.fold_n=0
+
+9
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__1 model.class_name=src.models.ventilator_model__1.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.nhead=8 model.params.transformer_num_layers=4 model.params.use_transformer_encoder=True model.params.use_mlp=True trainer.gpus=1 trainer.max_epochs=4 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.fold_n=0
+
+init style: 3, 5, 6
+
+10
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__2 model.class_name=src.models.ventilator_model__2.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=1 model.params.lstm_dim=256 model.params.num_layers=4 trainer.gpus=1 trainer.max_epochs=4 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.fold_n=0
+
+
+```shell
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
+```
+
+11
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__3 model.class_name=src.models.ventilator_model__3.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=1 model.params.num_layers=4 model.params.lstm_dim=256 model.params.num_layers=4 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True training.lightning_module_name=src.lightning_classes.lightning_ventilator__0.VentilatorRegression loss=smoothl1loss training.loss_calc_style=2 metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
+and mae loss
+
+12
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__3 model.class_name=src.models.ventilator_model__3.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=1 model.params.num_layers=6 model.params.lstm_dim=1024 model.params.num_layers=4 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True training.lightning_module_name=src.lightning_classes.lightning_ventilator__0.VentilatorRegression loss=mae training.loss_calc_style=1 metric=metric_manager1 optimizer=adamw training.lr=0.005 optimizer.params.weight_decay=0.001 scheduler=cosinewithwarmup datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
+

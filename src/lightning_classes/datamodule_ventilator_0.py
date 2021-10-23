@@ -2488,6 +2488,155 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         return data.fillna(0)
 
+    def make_features14(self, data):
+        """
+        8 and several more
+
+        Args:
+            data:
+
+        Returns:
+
+        """
+
+        data['time_step_diff'] = data['time_step'] - data.groupby('breath_id')['time_step'].shift(1).fillna(0)
+        data['u_in_rate'] = (data['u_in'] - data.groupby('breath_id')['u_in'].shift(1).fillna(0)) / data['time_step_diff']
+
+        data['area_gap'] = data['u_in'] * data['time_step_diff']
+        data['area_gap'] = data.groupby('breath_id')['area_gap'].cumsum()
+
+        data['area'] = data['time_step'] * data['u_in']
+        data['area'] = data.groupby('breath_id')['area'].cumsum()
+
+        data['u_in_cumsum'] = (data['u_in']).groupby(data['breath_id']).cumsum()
+
+        data['u_in_lag1'] = data.groupby('breath_id')['u_in'].shift(1)
+        data['u_out_lag1'] = data.groupby('breath_id')['u_out'].shift(1)
+        data['u_in_lag_back1'] = data.groupby('breath_id')['u_in'].shift(-1)
+        data['u_out_lag_back1'] = data.groupby('breath_id')['u_out'].shift(-1)
+        data['u_in_lag2'] = data.groupby('breath_id')['u_in'].shift(2)
+        data['u_out_lag2'] = data.groupby('breath_id')['u_out'].shift(2)
+        data['u_in_lag_back2'] = data.groupby('breath_id')['u_in'].shift(-2)
+        data['u_out_lag_back2'] = data.groupby('breath_id')['u_out'].shift(-2)
+        data['u_in_lag3'] = data.groupby('breath_id')['u_in'].shift(3)
+        data['u_out_lag3'] = data.groupby('breath_id')['u_out'].shift(3)
+        data['u_in_lag_back3'] = data.groupby('breath_id')['u_in'].shift(-3)
+        data['u_out_lag_back3'] = data.groupby('breath_id')['u_out'].shift(-3)
+        data['u_in_lag4'] = data.groupby('breath_id')['u_in'].shift(4)
+        data['u_out_lag4'] = data.groupby('breath_id')['u_out'].shift(4)
+        data['u_in_lag_back4'] = data.groupby('breath_id')['u_in'].shift(-4)
+        data['u_out_lag_back4'] = data.groupby('breath_id')['u_out'].shift(-4)
+        data = data.fillna(0)
+
+        data['breath_id__u_in__max'] = data.groupby(['breath_id'])['u_in'].transform('max')
+        data['breath_id__u_out__max'] = data.groupby(['breath_id'])['u_out'].transform('max')
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['breath_id__u_in__diffmax'] = data.groupby(['breath_id'])['u_in'].transform('max') - data['u_in']
+        data['breath_id__u_in__diffmean'] = data.groupby(['breath_id'])['u_in'].transform('mean') - data['u_in']
+
+        data['u_in_diff1'] = data['u_in'] - data['u_in_lag1']
+        data['u_out_diff1'] = data['u_out'] - data['u_out_lag1']
+        data['u_in_diff2'] = data['u_in'] - data['u_in_lag2']
+        data['u_out_diff2'] = data['u_out'] - data['u_out_lag2']
+        data['u_in_diff3'] = data['u_in'] - data['u_in_lag3']
+        data['u_out_diff3'] = data['u_out'] - data['u_out_lag3']
+        data['u_in_diff4'] = data['u_in'] - data['u_in_lag4']
+        data['u_out_diff4'] = data['u_out'] - data['u_out_lag4']
+        data['cross'] = data['u_in'] * data['u_out']
+        data['cross2'] = data['time_step'] * data['u_out']
+
+        data['one'] = 1
+        data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
+        data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
+
+        data['breath_id_lag'] = data['breath_id'].shift(1).fillna(0)
+        data['breath_id_lag2'] = data['breath_id'].shift(2).fillna(0)
+        data['breath_id_lagsame'] = np.select([data['breath_id_lag'] == data['breath_id']], [1], 0)
+        data['breath_id_lag2same'] = np.select([data['breath_id_lag2'] == data['breath_id']], [1], 0)
+        data['breath_id__u_in_lag'] = data['u_in'].shift(1).fillna(0)
+        data['breath_id__u_in_lag'] = data['breath_id__u_in_lag'] * data['breath_id_lagsame']
+        data['breath_id__u_in_lag2'] = data['u_in'].shift(2).fillna(0)
+        data['breath_id__u_in_lag2'] = data['breath_id__u_in_lag2'] * data['breath_id_lag2same']
+        c_dic = {10: 0, 20: 1, 50: 2}
+        r_dic = {5: 0, 20: 1, 50: 2}
+        rc_sum_dic = {v: i for i, v in enumerate([15, 25, 30, 40, 55, 60, 70, 100])}
+        rc_dot_dic = {v: i for i, v in enumerate([50, 100, 200, 250, 400, 500, 2500, 1000])}
+
+        data['C_cate'] = data['C'].map(c_dic)
+        data['R_cate'] = data['R'].map(r_dic)
+        data['RC_sum'] = (data['R'] + data['C']).map(rc_sum_dic)
+        data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
+
+        data['R_sum_c'] = (data['R'] + data['C']).astype(str)
+        data['R_mult_c'] = (data['R'] * data['C']).astype(str)
+        data['R'] = data['R'].astype(str)
+        data['C'] = data['C'].astype(str)
+        data['R__C'] = data["R"].astype(str) + '__' + data["C"].astype(str)
+        data = pd.get_dummies(data)
+
+        data['u_in_lagback_diff1'] = data['u_in'] - data['u_in_lag_back1']
+        data['u_out_lagback_diff1'] = data['u_out'] - data['u_out_lag_back1']
+        data['u_in_lagback_diff2'] = data['u_in'] - data['u_in_lag_back2']
+        data['u_out_lagback_diff2'] = data['u_out'] - data['u_out_lag_back2']
+        data['u_in_lagback_diff3'] = data['u_in'] - data['u_in_lag_back3']
+        data['u_out_lagback_diff3'] = data['u_out'] - data['u_out_lag_back3']
+        data['u_in_lagback_diff4'] = data['u_in'] - data['u_in_lag_back4']
+        data['u_out_lagback_diff4'] = data['u_out'] - data['u_out_lag_back4']
+
+        ######
+        data['u_in_lag_back10'] = data.groupby('breath_id')['u_in'].shift(-10)
+        data['u_out_lag_back10'] = data.groupby('breath_id')['u_out'].shift(-10)
+        data['u_in_lagback_diff10'] = data['u_in'] - data['u_in_lag_back10']
+        data['u_out_lagback_diff10'] = data['u_out'] - data['u_out_lag_back10']
+
+        data['time_step_diff'] = data['time_step'] - data.groupby('breath_id')['time_step'].shift().fillna(0)
+
+        data[["15_out_sum", "15_out_min", "15_out_max", "15_out_mean", "15_out_std"]] = (data \
+                                                                       .groupby('breath_id')['u_out'] \
+                                                                       .rolling(window=15, min_periods=1) \
+                                                                       .agg({"15_out_sum": "sum",
+                                                                             "15_out_min": "min",
+                                                                             "15_out_max": "max",
+                                                                             "15_out_mean": "mean",
+                                                                             "15_out_std": "std"
+                                                                             }).reset_index(level=0, drop=True))
+
+        for window in [2, 4, 5, 10, 15, 20, 30, 45]:
+            data[[f"{window}_in_sum", f"{window}_in_min", f"{window}_in_max",
+                  f"{window}_in_mean", f"{window}_in_std"]] = (data.groupby('breath_id')['u_in'].rolling(window=window,
+                                                                                                         min_periods=1) \
+                                                                                        .agg({f"{window}_in_sum": "sum",
+                                                                                              f"{window}_in_min": "min",
+                                                                                              f"{window}_in_max": "max",
+                                                                                              f"{window}_in_mean": "mean",
+                                                                                              f"{window}_in_std": "std"
+                                                                                              }).reset_index(level=0,
+                                                                                                             drop=True))
+
+        for halflife in [5, 9, 10, 15, 20]:
+
+            data[f'ewm_u_in_mean_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).mean().reset_index(level=0,
+                                                                                                          drop=True)
+
+            data[f'ewm_u_in_std_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).std().reset_index(level=0, drop=True)
+            data[f'ewm_u_in_corr_{halflife}'] = data.groupby('breath_id')['u_in'].ewm(halflife=halflife).corr().reset_index(level=0,
+                                                                                                          drop=True)
+
+
+        data['expand_mean'] = data.groupby('breath_id')['u_in'].expanding(2).mean().reset_index(level=0, drop=True)
+        data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
+        data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
+
+        return data.fillna(0).replace(np.inf, 0)
+
     def setup(self, stage=None):
 
         if os.path.exists(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.csv')):
@@ -2566,6 +2715,9 @@ class VentilatorDataModule(pl.LightningDataModule):
             elif self.cfg.datamodule.make_features_style == 13:
                 train = self.make_features13(train)
                 test = self.make_features13(test)
+            elif self.cfg.datamodule.make_features_style == 14:
+                train = self.make_features14(train)
+                test = self.make_features14(test)
             else:
                 raise ValueError
 
