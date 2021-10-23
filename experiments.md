@@ -225,7 +225,7 @@ MAKE OOF
 - scheduler LESS AGRESSIVE
 - 950 classes? or postprosess predictions?!!!!!!!!!!
 - голова на предсказание следующего значения
-- swa
++ swa
 - 3 best models
 - cnn in header 
 - pretrain on predicting next?
