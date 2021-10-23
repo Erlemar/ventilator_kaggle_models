@@ -72,6 +72,7 @@ def run(cfg: DictConfig) -> None:
             best_path = trainer.checkpoint_callback.best_model_path  # type: ignore
             # extract file name without folder
             save_name = os.path.basename(os.path.normpath(best_path))
+            print(f'{save_name = }')
             model = model.load_from_checkpoint(best_path, cfg=cfg, strict=False)
             model_name = Path(
                 cfg.callbacks.model_checkpoint.params.dirpath, f'best_{save_name}'.replace('.ckpt', '.pth')
@@ -92,7 +93,7 @@ def run(cfg: DictConfig) -> None:
         for pred in prediction:
             predictions.extend(pred.reshape(-1, ).detach().cpu().numpy())
         sub['pressure'] = predictions
-        sub.to_csv(f'submission_{run_name}_{save_name[:-4]}.csv', index=False)
+        sub.to_csv(f'submission_{run_name}_{save_name[:-7]}.csv', index=False)
 
         if cfg.training.debug:
             oof = pd.read_csv(os.path.join(cfg.datamodule.path, 'train.csv'), nrows=196000)
@@ -117,7 +118,7 @@ def run(cfg: DictConfig) -> None:
               VentilatorMAE()(torch.tensor(oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'pressure'].values),
                               torch.tensor(y_true.values),
                               torch.tensor(oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'u_out'].values)))
-        oof.to_csv(f'{run_name}_oof_fold_{cfg.datamodule.fold_n}_{save_name[:-4]}.csv', index=False)
+        oof.to_csv(f'{run_name}_oof_fold_{cfg.datamodule.fold_n}_{save_name[:-7]}.csv', index=False)
 
     print(run_name)
 
