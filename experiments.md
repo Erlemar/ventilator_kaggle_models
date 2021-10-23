@@ -213,6 +213,7 @@ MAKE OOF
 анализировать предсказания моделей и их ошибки
 мои нововведения
 взять как старт ту новую на 20 фолдах и добавлять к ней все
+- dropout for regularization
 - try make_features2
 - taking the cut of the sequence from 80 to 35 or 32
 - фичи
@@ -234,27 +235,6 @@ MAKE OOF
 
 ventilator_kaggle_models/train.py callbacks.early_stopping.params.patience=50 general.log_code=False logging=wandb model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=108 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=1000 trainer.gradient_clip_val=1000 loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=1024 datamodule.path=/workspace/data/ventilator_pressure_prediction datamodule=ventilator_datamodule_0 datamodule.make_features_style=3 datamodule.n_folds=20 datamodule.fold_n=0
 
-df['Ruin'] = df['R'].astype(float) * df['u_in'].astype(float)
-df['Cuin'] = df['C'].astype(float) * df['u_in'].astype(float)
-
-ffta = lambda x: np.abs(fft(np.append(x.values,x.values[0]))[:80])
-ffta.__name__ = 'ffta'
-
-fftw = lambda x: np.abs(fft(np.append(x.values,x.values[0])*w)[:80])
-fftw.__name__ = 'fftw'
-
-train['fft_u_in'] = train.groupby('breath_id')['u_in'].transform(ffta)
-train['fft_u_in_w'] = train.groupby('breath_id')['u_in'].transform(fftw)
-train['analytical'] = train.groupby('breath_id')['u_in'].transform(hilbert)
-train['envelope'] = np.abs(train['analytical'])
-train['phase'] = np.angle(train['analytical'])
-train['unwrapped_phase'] = train.groupby('breath_id')['phase'].transform(np.unwrap)
-train['phase_shift1'] = train.groupby('breath_id')['unwrapped_phase'].shift(1).astype(np.float32)
-train['IF'] = train['unwrapped_phase'] - train['phase_shift1'].astype(np.float32)
---
-df['time_gap'] = df['time_step'] - df.shift(1).fillna(0)['time_step']
-df['u_in_gap'] = df['u_in'] - df.shift(1).fillna(0)['u_in']
-df['u_in_rate'] = df['u_in_gap'] / df['time_gap']
 --
 new best!
 0.1516
@@ -274,3 +254,13 @@ feature selection
 
 SAVE FEATURES
 
+    df['time_gap'] = df['time_step'] - df.shift(1).fillna(0)['time_step']
+    df['u_in_gap'] = df['u_in'] - df.shift(1).fillna(0)['u_in']
+    df['u_in_rate'] = df['u_in_gap'] / df['time_gap']
+
+    df.loc[list(range(0, len(df), 80)), 'time_gap'] = 0
+    df.loc[list(range(0, len(df), 80)), 'u_in_gap'] = 0
+    df.loc[list(range(0, len(df), 80)), 'u_in_rate'] = 0
+    
+    df['area'] = df['u_in'] * df['time_gap']
+    df['area_cumsum'] = (df['area']).groupby(df['breath_id']).cum

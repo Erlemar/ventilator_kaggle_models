@@ -92,7 +92,7 @@ def run(cfg: DictConfig) -> None:
         for pred in prediction:
             predictions.extend(pred.reshape(-1, ).detach().cpu().numpy())
         sub['pressure'] = predictions
-        sub.to_csv(f'submission_{run_name}_{save_name}.csv', index=False)
+        sub.to_csv(f'submission_{run_name}_{save_name[:-4]}.csv', index=False)
 
         if cfg.training.debug:
             oof = pd.read_csv(os.path.join(cfg.datamodule.path, 'train.csv'), nrows=196000)
@@ -117,7 +117,7 @@ def run(cfg: DictConfig) -> None:
               VentilatorMAE()(torch.tensor(oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'pressure'].values),
                               torch.tensor(y_true.values),
                               torch.tensor(oof.loc[oof['fold'] == cfg.datamodule.fold_n, 'u_out'].values)))
-        oof.to_csv(f'{run_name}_oof_fold_{cfg.datamodule.fold_n}_{save_name}.csv', index=False)
+        oof.to_csv(f'{run_name}_oof_fold_{cfg.datamodule.fold_n}_{save_name[:-4]}.csv', index=False)
 
     print(run_name)
 

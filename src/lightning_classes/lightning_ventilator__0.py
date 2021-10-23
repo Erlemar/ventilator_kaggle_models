@@ -24,7 +24,7 @@ class VentilatorRegression(pl.LightningModule):
                 self.metrics.update({metric.metric_name: load_obj(metric.class_name)()})
 
         print(f'{self.metrics=}')
-        self.best_ventilator_mae = torch.tensor(1000)
+        # self.best_ventilator_mae = torch.tensor(1000)
 
     def forward(self, x, *args, **kwargs):
         return self.model(x)
@@ -123,9 +123,9 @@ class VentilatorRegression(pl.LightningModule):
                 score = self.metrics[metric](pred, batch['p']).mean()
             else:
                 score = self.metrics[metric](pred, batch['p'], batch['u_out']).mean()
-                self.best_ventilator_mae = score if score < self.best_ventilator_mae else self.best_ventilator_mae
+                # self.best_ventilator_mae = score if score < self.best_ventilator_mae else self.best_ventilator_mae
             self.log(f'valid_{metric}', score, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-            self.log('best_ventilator_mae', self.best_ventilator_mae, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+            # self.log('best_ventilator_mae', self.best_ventilator_mae, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def predict_step(self, batch, *args, **kwargs):  # type: ignore
