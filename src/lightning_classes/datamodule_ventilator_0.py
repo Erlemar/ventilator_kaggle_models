@@ -1366,11 +1366,6 @@ class VentilatorDataModule(pl.LightningDataModule):
         data[["15_out_mean"]] = data.groupby('breath_id')['u_out'].rolling(window=15, min_periods=1).agg(
             {"15_out_mean": "mean"}).reset_index(level=0, drop=True)
 
-        data.drop(['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
-                   'breath_id_lag2same'], axis=1, inplace=True)
-
-        if 'pressure' in data.columns:
-            data.drop('pressure', axis=1, inplace=True)
 
         return data.fillna(0)
 
