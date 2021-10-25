@@ -32,4 +32,4 @@ hydra:
     dir: outputs/${now:%Y-%m-%d_%H-%M-%S} #_${hydra.job.override_dirname}
   sweep:
     dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
-    subdir: ${datamodule.fold_n}
+    subdir: ${now:%Y-%m-%d_%H-%M-%S}_${datamodule.fold_n}
