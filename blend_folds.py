@@ -14,6 +14,8 @@ if __name__ == '__main__':
     sub_paths = glob.glob(f'outputs/{args.run_name}/*/submission*.csv')
     oof_paths = glob.glob(f'outputs/{args.run_name}/*/*oof*.csv')
 
+
+
     for p in sub_paths:
         assert os.path.exists(p), f'No {p = }'
         print(os.path.exists(p), p)
@@ -55,7 +57,8 @@ if __name__ == '__main__':
     print(f'{np.mean(scores) = }')
     print(f'{np.median(scores) = }')
 
-    train = pd.read_csv('d:/DataScience/Python_projects/Current_projects/GBVPP/data/train.csv')
+    # train = pd.read_csv('d:/DataScience/Python_projects/Current_projects/GBVPP/data/train.csv')
+    train = pd.read_csv('/workspace/data/ventilator_pressure_prediction/train.csv')
     all_pressure = sorted(train['pressure'].unique())
     pressure_min = all_pressure[0]
     pressure_max = all_pressure[-1]
