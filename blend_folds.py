@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     sub1['pressure'] = np.median(predictions, 1)
     median_path = f'outputs/sub_20_folds_median_{args.run_name}.csv'
+    print(median_path)
     sub1.to_csv(median_path, index=False)
 
     print('scores', scores)
@@ -72,7 +73,6 @@ if __name__ == '__main__':
     sub1 = pd.read_csv(oof_paths[0])
 
     for i, file_name in enumerate(oof_paths[1:]):
-        print(file_name)
         sub = pd.read_csv(file_name)
         sub1['pressure'] += sub['pressure']
 
