@@ -855,6 +855,8 @@ class VentilatorDataModule(pl.LightningDataModule):
         ALL_FEATURES = CONT_FEATURES + LAG_FEATURES
         if 'fold' in data.columns:
             ALL_FEATURES.append('fold')
+        if 'pressure' in data.columns:
+            ALL_FEATURES.append('fold')
 
         data['time_delta'] = data.groupby('breath_id')['time_step'].diff().fillna(0)
         data['delta'] = data['time_delta'] * data['u_in']
@@ -904,7 +906,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['RC_sum'] = (data['R'] + data['C']).map(rc_sum_dic)
         data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
 
-        norm_features = CONT_FEATURES + LAG_FEATURES
+        norm_features = CONT_FEATURES + LAG_FEATURES + 'pressure'
         if 'fold' in data.columns:
             norm_features.append('fold')
         assert norm_features == ALL_FEATURES, 'something went wrong'
