@@ -853,10 +853,11 @@ class VentilatorDataModule(pl.LightningDataModule):
         # LAG_FEATURES += [f'u_out_lag_{i}_back' for i in range(1, USE_LAG+1)]
         # ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
         ALL_FEATURES = CONT_FEATURES + LAG_FEATURES
-        if 'fold' in data.columns:
-            ALL_FEATURES.append('fold')
-        if 'pressure' in data.columns:
-            ALL_FEATURES.append('pressure')
+        for col in ['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+                   'breath_id_lag2same', 'pressure', 'fold']:
+            if col in data.columns:
+                ALL_FEATURES.append(col)
+
 
         data['time_delta'] = data.groupby('breath_id')['time_step'].diff().fillna(0)
         data['delta'] = data['time_delta'] * data['u_in']
@@ -906,7 +907,11 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['RC_sum'] = (data['R'] + data['C']).map(rc_sum_dic)
         data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
 
-        norm_features = CONT_FEATURES + LAG_FEATURES + ['pressure']
+        norm_features = CONT_FEATURES + LAG_FEATURES
+        for col in ['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
+                   'breath_id_lag2same', 'pressure', 'fold']:
+            if col in data.columns:
+                norm_features.append(col)
         if 'fold' in data.columns:
             norm_features.append('fold')
 
