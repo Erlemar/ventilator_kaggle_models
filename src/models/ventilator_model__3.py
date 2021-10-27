@@ -40,7 +40,7 @@ class VentilatorNet(nn.Module):
             )
         elif head_style == 2:
             self.head = nn.Sequential(
-                nn.Linear(lstm_dim * 2, 50),
+                nn.Linear(lstm_dim * 2, lstm_dim),
                 nn.Linear(lstm_dim * 2, logit_dim),
                 nn.SiLU(),
             )
