@@ -909,10 +909,10 @@ class VentilatorDataModule(pl.LightningDataModule):
         norm_features = CONT_FEATURES + LAG_FEATURES + ['pressure']
         if 'fold' in data.columns:
             norm_features.append('fold')
-        assert norm_features == ALL_FEATURES, 'something went wrong'
 
         print('data.columns', data.columns)
         print('ALL_FEATURES', ALL_FEATURES)
+        # assert norm_features == ALL_FEATURES, 'something went wrong'
 
         return data[ALL_FEATURES].fillna(0)
 
