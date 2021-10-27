@@ -906,7 +906,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['RC_sum'] = (data['R'] + data['C']).map(rc_sum_dic)
         data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
 
-        norm_features = CONT_FEATURES + LAG_FEATURES + 'pressure'
+        norm_features = CONT_FEATURES + LAG_FEATURES + ['pressure']
         if 'fold' in data.columns:
             norm_features.append('fold')
         assert norm_features == ALL_FEATURES, 'something went wrong'
