@@ -66,6 +66,7 @@ if __name__ == '__main__':
     pressure_step = all_pressure[1] - all_pressure[0]
     print(pressure_min, pressure_max, pressure_step)
     sub1['pressure'] = np.round((sub1.pressure - pressure_min) / pressure_step) * pressure_step + pressure_min
+    sub1['pressure'] = np.clip(sub1.pressure, pressure_min, pressure_max)
     median_pp_path = f'outputs/sub_20_folds_median_pp_{args.run_name}.csv'
     print(median_pp_path)
     sub1.to_csv(median_pp_path, index=False)

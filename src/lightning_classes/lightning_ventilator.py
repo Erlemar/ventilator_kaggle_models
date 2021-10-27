@@ -1,5 +1,8 @@
+import numpy as np
+import pandas as pd
 import pytorch_lightning as pl
 import torch
+import os
 from omegaconf import DictConfig
 
 from src.utils.technical_utils import load_obj
@@ -25,6 +28,12 @@ class VentilatorRegression(pl.LightningModule):
 
         print(f'{self.metrics=}')
         self.best_ventilator_mae = torch.tensor(1000)
+        if self.cfg.training.pp_for_loss:
+            train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
+            all_pressure = sorted(train['pressure'].unique())
+            self.pressure_min = all_pressure[0]
+            self.pressure_max = all_pressure[-1]
+            self.pressure_step = all_pressure[1] - all_pressure[0]
 
     def forward(self, x, *args, **kwargs):
         return self.model(x)
@@ -53,10 +62,19 @@ class VentilatorRegression(pl.LightningModule):
         pred = self(batch).squeeze(-1)
         # print('pred', pred)
         # print('train_batch', batch['input'].shape)
-        if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
-            loss = self.loss(pred, batch['p']).mean()
+        if self.cfg.training.pp_for_loss:
+            pred1 = np.round((pred - self.pressure_min) / self.pressure_step) * self.pressure_step + self.pressure_min
+            pred1 = np.clip(pred1, self.pressure_min, self.pressure_max)
+
+            if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
+                loss = self.loss(pred1, batch['p']).mean()
+            else:
+                loss = self.loss(pred1, batch['p'], batch['u_out']).mean()
         else:
-            loss = self.loss(pred, batch['p'], batch['u_out']).mean()
+            if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
+                loss = self.loss(pred, batch['p']).mean()
+            else:
+                loss = self.loss(pred, batch['p'], batch['u_out']).mean()
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=False, logger=True)
 
         for metric in self.metrics:
