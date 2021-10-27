@@ -856,7 +856,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         if 'fold' in data.columns:
             ALL_FEATURES.append('fold')
         if 'pressure' in data.columns:
-            ALL_FEATURES.append('fold')
+            ALL_FEATURES.append('pressure')
 
         data['time_delta'] = data.groupby('breath_id')['time_step'].diff().fillna(0)
         data['delta'] = data['time_delta'] * data['u_in']
@@ -910,6 +910,8 @@ class VentilatorDataModule(pl.LightningDataModule):
         if 'fold' in data.columns:
             norm_features.append('fold')
 
+        norm_features = list(set(norm_features))
+        ALL_FEATURES = list(set(ALL_FEATURES))
         print('data.columns', data.columns)
         print('ALL_FEATURES', ALL_FEATURES)
         # assert norm_features == ALL_FEATURES, 'something went wrong'
@@ -3018,7 +3020,6 @@ class VentilatorDataModule(pl.LightningDataModule):
                 top_columns = top_columns_10[:self.cfg.datamodule.top_n]
                 train = train[top_columns + ['fold']]
                 test = test[top_columns]
-
 
         if self.cfg.datamodule.normalize:
             if not self.cfg.datamodule.normalize_all:
