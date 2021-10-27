@@ -312,3 +312,20 @@ training.pp_for_loss=True
 ===
 new
 
+RESNET ARCHITECTURE.
+Features 8 (149) and 6 (23)
+model.params.init_style 3 and 12
+datamodule.normalize_all True and False
+loss=smoothl1loss, ventilator, mae, huber
+model.params.lstm_dim=256,1024
+model.params.head_style=1,2
+ model.params.num_layers=4,6
+training.loss_calc_style=1 (any),2 (nonventilator)
+
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0 model.class_name=src.models.ventilator_model__0.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
+
+---
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__3 model.class_name=src.models.ventilator_model__3.VentilatorNet model.params.input_dim=149 model.params.init_style=12 model.params.lstm_layers=1 model.params.lstm_dim=256 model.params.num_layers=4 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True training.lightning_module_name=src.lightning_classes.lightning_ventilator__0.VentilatorRegression loss=ventilator training.loss_calc_style=2 metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
+
+30
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__3 model.class_name=src.models.ventilator_model__30.VentilatorNet model.params.input_dim=149 model.params.init_style=12 model.params.lstm_layers=6 model.params.lstm_dim=256 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True training.lightning_module_name=src.lightning_classes.lightning_ventilator__0.VentilatorRegression loss=mae training.loss_calc_style=2 metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
