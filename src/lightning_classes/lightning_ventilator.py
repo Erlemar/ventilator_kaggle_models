@@ -31,8 +31,8 @@ class VentilatorRegression(pl.LightningModule):
         if self.cfg.training.pp_for_loss:
             train = pd.read_csv(os.path.join(self.cfg.datamodule.path, 'train.csv'))
             all_pressure = sorted(train['pressure'].unique())
-            self.pressure_min = all_pressure[0]
-            self.pressure_max = all_pressure[-1]
+            self.pressure_min = torch.tensor(all_pressure[0], device=self.device)
+            self.pressure_max = torch.tensor(all_pressure[-1], device=self.device)
             self.pressure_step = all_pressure[1] - all_pressure[0]
 
     def forward(self, x, *args, **kwargs):
@@ -63,8 +63,8 @@ class VentilatorRegression(pl.LightningModule):
         # print('pred', pred)
         # print('train_batch', batch['input'].shape)
         if self.cfg.training.pp_for_loss:
-            pred1 = np.round((pred - self.pressure_min) / self.pressure_step) * self.pressure_step + self.pressure_min
-            pred1 = np.clip(pred1, self.pressure_min, self.pressure_max)
+            pred1 = torch.round((pred - self.pressure_min) / self.pressure_step) * self.pressure_step + self.pressure_min
+            pred1 = torch.clip(pred1, self.pressure_min, self.pressure_max)
 
             if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
                 loss = self.loss(pred1, batch['p']).mean()

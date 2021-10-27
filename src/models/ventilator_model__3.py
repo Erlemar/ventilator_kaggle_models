@@ -45,9 +45,9 @@ class VentilatorNet(nn.Module):
                 nn.SiLU(),
             )
 
-        self.head_pressure = nn.Linear(lstm_dim * 2, 1)
-        self.head_pressure_in = nn.Linear(lstm_dim * 2, 1)
-        self.head_pressure_out = nn.Linear(lstm_dim * 2, 1)
+        # self.head_pressure = nn.Linear(lstm_dim * 2, 1)
+        # self.head_pressure_in = nn.Linear(lstm_dim * 2, 1)
+        # self.head_pressure_out = nn.Linear(lstm_dim * 2, 1)
         self.head_pressure = nn.Linear(logit_dim, 1)
         self.head_pressure_in = nn.Linear(logit_dim, 1)
         self.head_pressure_out = nn.Linear(logit_dim, 1)
