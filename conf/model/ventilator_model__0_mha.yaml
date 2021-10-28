@@ -4,9 +4,12 @@ params:
   lstm_dim: 1024
   lstm_layers: 4
   logit_dim: 50
+  dropout: 0.0
   num_layers: 1
+  num_heads: 2
   n_classes: ${training.n_classes}
   initialize: True
   init_style: 1
-  single_lstm: False
+  single_atn: True
+  att_key: feature
 

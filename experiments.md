@@ -329,3 +329,10 @@ python train.py callbacks.early_stopping.params.patience=50 general.log_code=Fal
 
 30
 python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__3 model.class_name=src.models.ventilator_model__30.VentilatorNet model.params.input_dim=149 model.params.init_style=12 model.params.lstm_layers=6 model.params.lstm_dim=256 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True training.lightning_module_name=src.lightning_classes.lightning_ventilator__0.VentilatorRegression loss=mae training.loss_calc_style=2 metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0
+
+======
+model.params.att_key=feature,original
+model.params.single_atn=False,True
+model.params.num_heads=4,1,2,8,16
+
+python train.py callbacks.early_stopping.params.patience=50 general.log_code=False model=ventilator_model__0_mha model.class_name=src.models.ventilator_model__0_mha.VentilatorNet model.params.input_dim=149 model.params.init_style=3 model.params.lstm_layers=6 model.params.num_layers=1 trainer.gpus=1 trainer.max_epochs=3 trainer.gradient_clip_val=1000 training.debug=True loss=ventilator metric=metric_manager1 optimizer=adam scheduler=plateau scheduler.params.patience=10 scheduler.params.factor=0.5 datamodule.num_workers=0 datamodule.batch_size=32 datamodule=ventilator_datamodule_0 datamodule.make_features_style=8 datamodule.n_folds=20 datamodule.fold_n=0 model.params.att_key=original model.params.single_atn=False model.params.num_heads=4

@@ -9,10 +9,13 @@ class VentilatorNet(nn.Module):
                  lstm_layers: int = 4,
                  logit_dim: int = 256,
                  num_layers: int = 256,
+                 dropout: float = 0.0,
                  n_classes: int = 1,
+                 num_heads: int = 2,
                  initialize: bool = True,
                  init_style: int = 1,
-                 single_lstm: bool = True,
+                 single_atn: bool = True,
+                 att_key: str = 'feature',
                  ) -> None:
         """
         Model class.
@@ -21,11 +24,18 @@ class VentilatorNet(nn.Module):
             cfg: main config
         """
         super().__init__()
-        self.lstm0 = nn.LSTM(input_dim, lstm_dim, batch_first=True, bidirectional=True, num_layers=num_layers)
-        self.lstms = nn.ModuleList([nn.LSTM(lstm_dim * 4 // (2 ** (i + 1)),
-                                            lstm_dim // (2 ** (i + 1)),
-                                            batch_first=True, bidirectional=True, num_layers=num_layers)
-                                    for i in range(lstm_layers - 1)])
+        self.att_key = att_key
+        self.lstm0 = nn.LSTM(input_dim, lstm_dim, batch_first=True, bidirectional=True, num_layers=num_layers, dropout=dropout)
+        kdim = None if self.att_key == 'feature' else input_dim
+        lstms = []
+        for i in range(lstm_layers - 1):
+            lstms.append(nn.LSTM(lstm_dim * 4 // (2 ** (i + 1)), lstm_dim // (2 ** (i + 1)), batch_first=True, bidirectional=True, num_layers=num_layers, dropout=dropout))
+            if not single_atn:
+                lstms.append(nn.MultiheadAttention(lstm_dim * 2 // (2 ** (i + 1)), num_heads=num_heads, batch_first=True, kdim=kdim, vdim=kdim, dropout=dropout))
+
+        self.lstms = nn.ModuleList(lstms)
+
+        self.atn = nn.MultiheadAttention(4 * lstm_dim // (2 ** lstm_layers), num_heads=num_heads, batch_first=True, kdim=kdim, vdim=kdim, dropout=dropout)
 
         self.linear1 = nn.Linear(4 * lstm_dim // (2 ** lstm_layers), logit_dim)
         self.act = nn.SELU()
@@ -216,8 +226,18 @@ class VentilatorNet(nn.Module):
 
     def forward(self, x):
         features, _ = self.lstm0(x['input'])
-        for lstm in self.lstms:
-            features, _ = lstm(features)
+        for layer in self.lstms:
+            if layer._get_name() == 'LSTM':
+                features, _ = layer(features)
+            elif layer._get_name() == 'MultiheadAttention':
+                if self.att_key == 'feature':
+                    features, _ = layer(features, features, features)
+                else:
+                    features, _ = layer(features, x['input'], x['input'])
+        if self.att_key == 'feature':
+            features, _ = self.atn(features, features, features)
+        else:
+            features, _ = self.atn(features, x['input'], x['input'])
         features = self.linear1(features)
         features = self.act(features)
         pred = self.linear2(features)
