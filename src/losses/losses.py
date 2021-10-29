@@ -21,7 +21,7 @@ class NoisyVentilatorLoss(nn.Module):
     Directly optimizes the competition metric
     """
     def __call__(self, preds, y, u_out):
-        y = y * torch.normal(1, 0.05, size = y.shape)
+        y = y * torch.normal(1, 0.05, size = y.shape).to(y.device)
         w = 1 - u_out
         mae = w * (y - preds).abs()
         mae = mae.sum(-1) / w.sum(-1)
