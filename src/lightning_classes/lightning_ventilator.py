@@ -71,10 +71,17 @@ class VentilatorRegression(pl.LightningModule):
             else:
                 loss = self.loss(pred1, batch['p'], batch['u_out']).mean()
         else:
-            if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
-                loss = self.loss(pred, batch['p']).mean()
+            if not self.cfg.training.noisy_loss:
+                if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
+                    loss = self.loss(pred, batch['p']).mean()
+                else:
+                    loss = self.loss(pred, batch['p'], batch['u_out']).mean()
             else:
-                loss = self.loss(pred, batch['p'], batch['u_out']).mean()
+                if self.cfg.loss.class_name == 'torch.nn.L1Loss' or self.cfg.loss.class_name == 'torch.nn.HuberLoss':
+                    loss = self.loss(pred, batch['p'] * torch.normal(1, 0.05, size = batch['p'].shape).to(batch['p'].device)).mean()
+                else:
+                    loss = self.loss(pred, batch['p'] * torch.normal(1, 0.05, size = batch['p'].shape).to(batch['p'].device), batch['u_out']).mean()
+
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=False, logger=True)
 
         for metric in self.metrics:
