@@ -16,6 +16,17 @@ class VentilatorLoss(nn.Module):
 
         return mae
 
+class NoisyVentilatorLoss(nn.Module):
+    """
+    Directly optimizes the competition metric
+    """
+    def __call__(self, preds, y, u_out):
+        y = y * torch.clip(torch.normal(1, 0.05, size=y.shape), 0, 1).to(device='cuda')
+        w = 1 - u_out
+        mae = w * (y - preds).abs()
+        mae = mae.sum(-1) / w.sum(-1)
+
+        return mae
 class MAE(nn.Module):
     """
     Directly optimizes the competition metric
