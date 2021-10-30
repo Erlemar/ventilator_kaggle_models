@@ -69,6 +69,8 @@ def run(cfg: DictConfig) -> None:
     dm = load_obj(cfg.datamodule.data_module_name)(cfg=cfg)
     trainer.fit(model, dm)
 
+    print(f'{run_name = }')
+
     if cfg.general.save_pytorch_model and cfg.general.save_best:
         if os.path.exists(trainer.checkpoint_callback.best_model_path):  # type: ignore
             best_path = trainer.checkpoint_callback.best_model_path  # type: ignore
