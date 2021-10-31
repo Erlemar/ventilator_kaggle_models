@@ -3706,6 +3706,10 @@ class VentilatorDataModule(pl.LightningDataModule):
             elif self.cfg.datamodule.make_features_style == 6:
                 train = self.make_features6(train)
                 test = self.make_features6(test)
+            elif self.cfg.datamodule.make_features_style == 61:
+
+                train = self.make_features61(train)
+                test = self.make_features61(test)
             elif self.cfg.datamodule.make_features_style == 62:
                 with open(os.path.join(self.cfg.datamodule.path, 'train_data_feats.pkl'), 'rb') as f:
                     d = pickle.load(f)
@@ -3733,9 +3737,6 @@ class VentilatorDataModule(pl.LightningDataModule):
                 test['clusterIDeu'] = d['clusterIDeu'].values.astype(str).copy()
                 test['clusterIDdtw'] = d['clusterIDdtw'].values.astype(str).copy()
                 del d, tmp, tmp1
-                train = self.make_features61(train)
-                test = self.make_features61(test)
-            elif self.cfg.datamodule.make_features_style == 62:
                 train = self.make_features62(train)
                 test = self.make_features62(test)
             elif self.cfg.datamodule.make_features_style == 7:
