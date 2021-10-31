@@ -1172,6 +1172,8 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['RC_sum'] = (data['R'] + data['C']).map(rc_sum_dic)
         data['RC_dot'] = (data['R'] * data['C']).map(rc_dot_dic)
 
+        data = pd.get_dummies(data)
+
         norm_features = CONT_FEATURES + LAG_FEATURES
         for col in ['id', 'breath_id', 'one', 'count', 'breath_id_lag', 'breath_id_lag2', 'breath_id_lagsame',
                    'breath_id_lag2same', 'pressure', 'fold']:
@@ -1186,8 +1188,13 @@ class VentilatorDataModule(pl.LightningDataModule):
         print('ALL_FEATURES', ALL_FEATURES)
         # assert norm_features == ALL_FEATURES, 'something went wrong'
 
-        return data[ALL_FEATURES].fillna(0)
-
+        return data[ALL_FEATURES + ['clusterIDeu_0.0', 'clusterIDeu_1.0',
+       'clusterIDeu_2.0', 'clusterIDeu_3.0', 'clusterIDeu_4.0',
+       'clusterIDeu_5.0', 'clusterIDeu_6.0', 'clusterIDeu_7.0',
+       'clusterIDeu_8.0', 'clusterIDeu_9.0', 'clusterIDdtw_0.0',
+       'clusterIDdtw_1.0', 'clusterIDdtw_2.0', 'clusterIDdtw_3.0',
+       'clusterIDdtw_4.0', 'clusterIDdtw_5.0', 'clusterIDdtw_6.0',
+       'clusterIDdtw_7.0', 'clusterIDdtw_8.0', 'clusterIDdtw_9.0']].fillna(0)
 
     def make_features7(self, data):
         data['area'] = data['time_step'] * data['u_in']
