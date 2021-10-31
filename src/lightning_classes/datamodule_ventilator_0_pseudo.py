@@ -2983,7 +2983,7 @@ class VentilatorDataModule(pl.LightningDataModule):
                 test = self.make_features15(test)
                 pseudo_train = self.make_features15(pseudo_train)
             else:
-                raise ValueError
+                raise ValueError('Wrong feature style')
 
             train.to_csv(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.csv'), index=False)
             test.to_csv(os.path.join(self.cfg.datamodule.path, f'test_{self.cfg.datamodule.make_features_style}.csv'), index=False)
