@@ -5012,6 +5012,13 @@ class VentilatorDataModule(pl.LightningDataModule):
 
         print('n_folds', train['fold'].nunique())
         print('train.columns', train.columns)
+        for col in train.columns:
+            if train[col].isnull().any():
+                print(col, 'NULLLLLLLL')
+        for col in test.columns:
+            if test[col].isnull().any():
+                print(col, 'NULLLLLLLL')
+        print(train.isnull().any())
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
         # 103
         top_columns_3 = ['u_in_diff1', 'u_in_lagback_diff1', 'u_in_diff2',
