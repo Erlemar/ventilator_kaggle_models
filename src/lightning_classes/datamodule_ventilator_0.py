@@ -4742,7 +4742,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['count'] = (data['one']).groupby(data['breath_id']).cumsum()
         data['u_in_cummean'] = data['u_in_cumsum'] / data['count']
 
-        data = data.drop(['count', 'one'], axis=1)
+        # data = data.drop(['count', 'one'], axis=1)
 
         for lag in range(1, self.cfg.datamodule.use_lag + 1):
             data[f'breath_id_lag{lag}'] = data['breath_id'].shift(lag).fillna(0)
