@@ -5018,7 +5018,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         for col in test.columns:
             if test[col].isnull().any():
                 print(col, 'NULLLLLLLL')
-        print(train.isnull().any())
+
         test_u_out = test[['u_out']].to_numpy().reshape(-1, 80)
         # 103
         top_columns_3 = ['u_in_diff1', 'u_in_lagback_diff1', 'u_in_diff2',
@@ -5155,6 +5155,9 @@ class VentilatorDataModule(pl.LightningDataModule):
         train_data = train_data.reshape(-1, 80, train_data.shape[-1])
         valid_data = valid_data.reshape(-1, 80, valid_data.shape[-1])
         test = test.reshape(-1, 80, train_data.shape[-1])
+        train_data = np.where(np.isnan(train_data), 0, train_data)
+        valid_data = np.where(np.isnan(valid_data), 0, valid_data)
+        test = np.where(np.isnan(test), 0, test)
         # gkf = KFold(n_splits=self.cfg.datamodule.n_folds, shuffle=True, random_state=self.cfg.training.seed)
         # if self.cfg.datamodule.split == 'GroupKFold':
         #     gkf = GroupKFold(n_splits=self.cfg.datamodule.n_folds)

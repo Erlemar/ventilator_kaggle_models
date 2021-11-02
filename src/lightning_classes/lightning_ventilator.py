@@ -59,6 +59,8 @@ class VentilatorRegression(pl.LightningModule):
     def training_step(self, batch, *args, **kwargs):  # type: ignore
         # data = batch['input']
         # pred = self(data).squeeze(-1)
+        print('check nan')
+        print( torch.isnan(x['input']))
         pred = self(batch).squeeze(-1)
         # print('pred', pred)
         # print('train_batch', batch['input'].shape)
