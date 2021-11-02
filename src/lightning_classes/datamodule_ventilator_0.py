@@ -4159,7 +4159,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         data['expand_max'] = data.groupby('breath_id')['u_in'].expanding(2).max().reset_index(level=0, drop=True)
         data['expand_std'] = data.groupby('breath_id')['u_in'].expanding(2).std().reset_index(level=0, drop=True)
 
-        return data.replace((np.inf, -np.inf, np.nan), 0)
+        return data.fillna(0).replace(np.inf, -np.inf, np.nan, 0)
 
     def make_features18(self, data):
         """
@@ -4364,7 +4364,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         data[["15_out_mean"]] = data.groupby('breath_id')['u_out'].rolling(window=15, min_periods=1).agg(
             {"15_out_mean": "mean"}).reset_index(level=0, drop=True)
 
-        return data.fillna(0)
+        return data.fillna(0).replace(np.inf, -np.inf, np.nan, 0)
 
     def make_features181(self, data):
         """
@@ -4568,7 +4568,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         data[["15_out_mean"]] = data.groupby('breath_id')['u_out'].rolling(window=15, min_periods=1).agg(
             {"15_out_mean": "mean"}).reset_index(level=0, drop=True)
 
-        return data.fillna(0)
+        return data.fillna(0).replace(np.inf, -np.inf, np.nan, 0)
 
     def make_features19(self, data):
         """
@@ -4680,7 +4680,7 @@ class VentilatorDataModule(pl.LightningDataModule):
         print('ALL_FEATURES', ALL_FEATURES)
         # assert norm_features == ALL_FEATURES, 'something went wrong'
 
-        return data[ALL_FEATURES].fillna(0)
+        return data[ALL_FEATURES].fillna(0).replace(np.inf, -np.inf, np.nan, 0)
 
 
     def make_features191(self, data):
@@ -4792,7 +4792,8 @@ class VentilatorDataModule(pl.LightningDataModule):
         print('ALL_FEATURES', ALL_FEATURES)
         # assert norm_features == ALL_FEATURES, 'something went wrong'
 
-        return data[ALL_FEATURES].fillna(0)
+        return data[ALL_FEATURES].fillna(0).replace(np.inf, -np.inf, np.nan, 0)
+
     def setup(self, stage=None):
 
         if os.path.exists(os.path.join(self.cfg.datamodule.path, f'train_{self.cfg.datamodule.make_features_style}.csv')):
