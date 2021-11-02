@@ -5015,6 +5015,9 @@ class VentilatorDataModule(pl.LightningDataModule):
         for col in train.columns:
             if train[col].isnull().any():
                 print(col, 'NULLLLLLLL')
+        for col in train.columns:
+            if train[col].isna().any():
+                print(col, 'NULLLLLLLL')
         for col in test.columns:
             if test[col].isnull().any():
                 print(col, 'NULLLLLLLL')
