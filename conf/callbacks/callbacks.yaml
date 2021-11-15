@@ -21,11 +21,11 @@ other_callbacks:
   - class_name: pytorch_lightning.callbacks.LearningRateMonitor
     params:
       logging_interval: step
-  - class_name: pytorch_lightning.callbacks.RichProgressBar
-    params:
-      leave: True
-  - class_name: pytorch_lightning.callbacks.ModelSummary
-    params:
-      max_depth: 1
+#  - class_name: pytorch_lightning.callbacks.RichProgressBar
+#    params:
+#      leave: True
+#  - class_name: pytorch_lightning.callbacks.ModelSummary
+#    params:
+#      max_depth: 1
 #  - class_name: pytorch_lightning.callbacks.GPUStatsMonitor
 #    params:
