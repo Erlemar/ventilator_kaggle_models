@@ -6,7 +6,7 @@ mode: "min"
 seed: 2021
 debug: False
 n_classes: 1
-lightning_module_name: src.lightning_classes.lightning_ventilator.VentilatorRegression
+lightning_module_name: src.lightning_classes.lightning_ventilator_post.VentilatorRegression
 loss_calc_style: 1
 pp_for_loss: False
 noisy_loss: False
